@@ -1,0 +1,11 @@
+import fabsettings
+
+from fabric.api import env
+
+env.project_name = fabsettings.PROJECT_NAME
+env.project_sites = fabsettings.PROJECT_SITES
+env.activate = 'source ~/.bash_profile; source `which virtualenvwrapper.sh`; workon {0}'\
+        .format(fabsettings.PROJECT_NAME)
+
+# imported fab functions
+from fabric_colors.deployment import *

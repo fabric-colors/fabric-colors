@@ -1,0 +1,1 @@
+pip install -e git+git://github.com/fabric-colors/fabric-colors#egg=fabric-colors
