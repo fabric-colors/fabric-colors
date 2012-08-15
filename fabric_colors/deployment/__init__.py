@@ -4,7 +4,10 @@ import subprocess
 from fabric.api import env
 
 
-def env_get(target):
+def _env_get(target):
+    """
+    Grab environment variables given the target machine and assign it to fabric's env
+    """
     if target == 'vagrant':
         # vagrant specific settings
         env.user = 'vagrant'
@@ -23,7 +26,7 @@ def env_get(target):
         return
     elif target not in list(env.project_sites.viewkeys()):
         # handle environment that isn't specified
-        print ("Oops. There's no such site. try `fab env_get:dev` or `fab env_get:prod`")
+        print ("Oops. There's no such site. try `fab _env_get:dev` or `fab env_get:prod`")
         return
 
     # handle environment that was specified
@@ -36,5 +39,8 @@ def env_get(target):
 
 
 def deploy(target):
-    env_get(target)
+    """
+    Execute a deployment to the given target machine.
+    """
+    _env_get(target)
     print env
