@@ -42,3 +42,62 @@ def server_chkuser(username, target):
                         echo ""; \
                     fi'.format(username))
     return result.stdout
+
+
+def server_distro(username, target):
+    _env_get(target)
+    env.user = username
+    result = run('cat /etc/*-release')
+    import re
+    result_list = re.findall(r'([^=\s,]+)=([^=\s,]+)', result)
+    for item in result_list:
+        if item[0] == 'ID':
+            return item[1]
+    return None
+
+
+def server_visudo(target):
+    """
+    Assign sudo rights to all users in the wheel group on arch linux. e.g. ` fab server_visudo:dev`
+    """
+    _env_get(target)
+    env.user = 'root'
+    run("""
+            if [ -e /etc/sudoers.tmp -o "$(pidof visudo)" ]; then
+                echo $(pidof visudo)
+                echo "/etc/sudoers busy, try again later"
+                exit 1
+            fi
+
+            cp -p /etc/sudoers /etc/sudoers.bak
+            cp -p /etc/sudoers /etc/sudoers.tmp
+
+            line="%wheel ALL=(ALL) ALL"
+
+            sed -i "/${line}/ s/# *//" /etc/sudoers.tmp
+
+            mv /etc/sudoers.tmp /etc/sudoers
+
+            exit 0
+        """)
+
+
+def _server_python(username, target, distro):
+    if distro == "arch":
+        from fabric_colors.distro.arch import _server_python_arch, \
+                _server_virtualenvwrapper_arch
+        _server_python_arch()
+        _server_virtualenvwrapper_arch(systemwide=True)
+        _server_virtualenvwrapper_arch()
+
+
+def server_setup(username, target):
+    """
+    Runs all scripts as given username, in sudo mode, on the target server. e.g. `fab server_setup:web,dev`
+    """
+    _env_get(target)
+    env.user = username
+    distro = server_distro(username, target)
+    if distro:
+        print("Setting up {0}, running on {1}, with {2}".format(target, distro, username))
+        _server_python(username, target, distro)
