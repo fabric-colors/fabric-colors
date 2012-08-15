@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='Fabric Colors',
-    version='0.1dev',
+    version='0.2',
     packages=['fabric_colors', ],
     license='LICENSE',
     description='Reusable fabric functions',
