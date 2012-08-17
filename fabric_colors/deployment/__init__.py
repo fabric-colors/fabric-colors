@@ -1,7 +1,8 @@
 import os
 import subprocess
 
-from fabric.api import env
+from fabric.api import env, run
+from fabric_colors.deployment import *
 
 
 def _env_get(target):
@@ -43,4 +44,11 @@ def deploy(target):
     Execute a deployment to the given target machine.
     """
     _env_get(target)
-    print env
+
+
+def mkvirtualenv(target):
+    """
+    Create the virtualenv for our project on the target machine.
+    """
+    _env_get(target)
+    run('mkvirtualenv -p python2.7 %s' % (env.project_name))
