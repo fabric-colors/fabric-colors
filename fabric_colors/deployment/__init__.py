@@ -1,7 +1,8 @@
 import os
 import subprocess
 
-from fabric.api import env, run, sudo
+from fabric.api import env, run, sudo, require
+from fabric.context_managers import prefix
 from fabric_colors.deployment import *
 
 
@@ -47,10 +48,11 @@ def deploy(target):
     _env_get(target)
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
-    git_archive_and_upload_tar()
-    pip_install_requirements()
-    symlink_current_release()
-    django_collectstatic(target)
+    if git_branch_check():
+        git_archive_and_upload_tar()
+        pip_install_requirements()
+        symlink_current_release()
+        django_collectstatic(target)
 
 
 def mkvirtualenv(target):
@@ -75,26 +77,37 @@ def prepare_deploy_env(target):
         print("{0} already exists".format(env.path_releases))
 
 
-def git_archive_and_upload_tar():
-    """
-    Create an archive from the current git branch and upload it to target machine.
-    """
-    require('release', provided_by[deploy])
+def git_branch_check():
+    require('release', provided_by=[deploy])
     current_branch = str(subprocess.Popen('git branch | grep "*" | sed "s/* //"', \
             shell=True,\
             stdin=subprocess.PIPE, \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
     env.git_branch = current_branch
     if env.git_branch == "master":
-        local('git archive --format=tar %(git_branch)s | gzip > %(release)s.tar.gz' % env)
-        run('mkdir -p %(path)s/releases/%(release)s' % env)
-        run('mkdir -p %(path)s/packages/' % env)
-        rsync_project('%(path)s/packages/' % env, '%(release)s.tar.gz' % env, extra_opts='-avz --progress')
-        run('cd %(path)s/releases/%(release)s && tar zxf ../../packages/%(release)s.tar.gz' % env)
-        local('rm %(release)s.tar.gz' % env)
+        return True
     else:
-        print("You are currently in the %(git_branch)s deploy will not work." % env)
-        print("Please checkout to master branch and merge your features before deploying.")
+        print("You are currently in the %(git_branch)s branch so `fab deploy:your_target` will not work." % env)
+        print("Please checkout to master branch and merge your features before running `fab deploy:your_target`.")
+        return False
+
+
+def git_archive_and_upload_tar():
+    """
+    Create an archive from the current git branch and upload it to target machine.
+    """
+    require('release', provided_by=[deploy])
+    current_branch = str(subprocess.Popen('git branch | grep "*" | sed "s/* //"', \
+            shell=True,\
+            stdin=subprocess.PIPE, \
+            stdout=subprocess.PIPE).communicate()[0]).rstrip()
+    env.git_branch = current_branch
+    local('git archive --format=tar %(git_branch)s | gzip > %(release)s.tar.gz' % env)
+    run('mkdir -p %(path)s/releases/%(release)s' % env)
+    run('mkdir -p %(path)s/packages/' % env)
+    rsync_project('%(path)s/packages/' % env, '%(release)s.tar.gz' % env, extra_opts='-avz --progress')
+    run('cd %(path)s/releases/%(release)s && tar zxf ../../packages/%(release)s.tar.gz' % env)
+    local('rm %(release)s.tar.gz' % env)
 
 
 def pip_install_requirements():
