@@ -82,13 +82,23 @@ def server_visudo(target):
         """)
 
 
-def _server_python(username, target, distro):
+def server_python(username, target, distro="arch"):
+    """
+    Sets up the python environment, given the username, target and distro (defaults to arch). e.g. `fab server_python:web,dev`
+    """
+    _env_get(target)
     if distro == "arch":
         from fabric_colors.distro.arch import _server_python_arch, \
                 _server_virtualenvwrapper_arch
         _server_python_arch()
-        _server_virtualenvwrapper_arch(systemwide=True)
-        _server_virtualenvwrapper_arch()
+        _server_virtualenvwrapper_arch(username, systemwide=True)
+        _server_virtualenvwrapper_arch(username)
+
+
+def server_postgresql(username, target, distro):
+    if distro == "arch":
+        from fabric_colors.distro.arch import _server_postgresql
+        _server_postgresql(username, target)
 
 
 def server_setup(username, target):
@@ -100,4 +110,7 @@ def server_setup(username, target):
     distro = server_distro(username, target)
     if distro:
         print("Setting up {0}, running on {1}, with {2}".format(target, distro, username))
-        _server_python(username, target, distro)
+        server_python(username, target, distro)
+        from fabric_colors.distro.arch import server_postgresql_status
+        server_postgresql_status(username, target)
+        #server_postgresql(username, target, distro)
