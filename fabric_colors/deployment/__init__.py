@@ -1,8 +1,9 @@
 import os
 import subprocess
 
-from fabric.api import env, run, sudo, require
-from fabric.context_managers import prefix
+from fabric.api import env, run, sudo, require, local
+from fabric.context_managers import prefix, cd, hide, settings as fabconfig
+from fabric.contrib.project import rsync_project
 from fabric_colors.deployment import *
 
 
@@ -116,7 +117,7 @@ def pip_install_requirements():
     """
     require('release', provided_by=[deploy])
     with prefix(env.activate):
-        run('cd %(path)s; pip install -r ./releases/%(release)s/requirements.txt' % env)
+        run('&& pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
 
 
 def django_collectstatic(target):
@@ -144,5 +145,5 @@ def symlink_current_release():
 def symlink_check():
     with cd(env.path):
         cmd = "cd releases; [ -d current ] && echo '1'"
-        with fab_settings(hide('everything'), warn_only=True):
+        with fabconfig(hide('everything'), warn_only=True):
             return bool(run(cmd))
