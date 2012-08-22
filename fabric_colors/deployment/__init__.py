@@ -104,8 +104,8 @@ def git_archive_and_upload_tar():
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
     env.git_branch = current_branch
     local('git archive --format=tar %(git_branch)s | gzip > %(release)s.tar.gz' % env)
-    run('mkdir -p %(path)s/releases/%(release)s' % env)
-    run('mkdir -p %(path)s/packages/' % env)
+    run('; mkdir -p %(path)s/releases/%(release)s' % env)
+    run('; mkdir -p %(path)s/packages/' % env)
     rsync_project('%(path)s/packages/' % env, '%(release)s.tar.gz' % env, extra_opts='-avz --progress')
     run('cd %(path)s/releases/%(release)s && tar zxf ../../packages/%(release)s.tar.gz' % env)
     local('rm %(release)s.tar.gz' % env)
