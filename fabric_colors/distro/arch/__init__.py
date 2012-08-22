@@ -34,20 +34,20 @@ def _server_virtualenvwrapper_arch(username, systemwide=False):
     if systemwide == True:
         path_bp = '/etc/skel'
 
-    run('pip2 install virtualenvwrapper')
+    sudo('; pip2 install virtualenvwrapper')
 
     if not _server_check_virtualenvwrapper(path_bp):
         print("virtualenvwrapper hasn't been installed in {0}/.bash_profile yet. Installing...".format(path_bp))
-        run('echo \'export WORKON_HOME=$HOME/.virtualenvs\' >> {0}/.bash_profile'.format(path_bp))
-        run('echo \'export PROJECT_HOME=$HOME/work\' >> {0}/.bash_profile'.format(path_bp))
-        run('echo \'source `which virtualenvwrapper.sh`\' >> {0}/.bash_profile'.format(path_bp))
+        sudo('echo \'export WORKON_HOME=$HOME/.virtualenvs\' >> {0}/.bash_profile'.format(path_bp))
+        sudo('echo \'export PROJECT_HOME=$HOME/work\' >> {0}/.bash_profile'.format(path_bp))
+        sudo('echo \'source `which virtualenvwrapper.sh`\' >> {0}/.bash_profile'.format(path_bp))
     else:
         print("virtualenvwrapper has been installed in {0}/.bash_profile already.".format(path_bp))
 
 
 def server_postgresql_install(username, target):
     _env_get(target)
-    sudo('pacman -S postgresql --noconfirm')
+    sudo('; pacman -S postgresql --noconfirm')
 
 
 def server_postgresql_start(username, target):
