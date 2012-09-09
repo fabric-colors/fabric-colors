@@ -10,8 +10,8 @@ setup(
     author='Calvin Cheng',
     author_email='calvin@calvinx.com',
     install_requires=['distribute', 'Fabric>=1.4.3'],
-    test_require=[],
-    test_suite='tests',
+    tests_require=[],
+    test_suite='fabric_colors.tests',
     entry_points={
         'console_scripts': [
             'fabc = fabric_colors.main:main',
