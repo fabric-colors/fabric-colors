@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='Fabric Colors',
-    version='0.8',
+    version='0.8.3',
     packages=['fabric_colors', ],
     license='LICENSE',
     description='Reusable fabric functions',
@@ -10,4 +10,9 @@ setup(
     author='Calvin Cheng',
     author_email='calvin@calvinx.com',
     install_requires=[],
+    entry_points={
+        'console_scripts': [
+            'fabc = fabric_colors.main:main',
+        ]
+    }
 )
