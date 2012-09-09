@@ -10,4 +10,9 @@ setup(
     author='Calvin Cheng',
     author_email='calvin@calvinx.com',
     install_requires=[],
+    entry_points={
+        'console_scripts': [
+            'fabc = fabric_colors.main:main',
+        ]
+    }
 )
