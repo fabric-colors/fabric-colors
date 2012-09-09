@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='Fabric Colors',
@@ -9,7 +9,9 @@ setup(
     long_description=open('README.md').read(),
     author='Calvin Cheng',
     author_email='calvin@calvinx.com',
-    install_requires=['Fabric>=1.4.3'],
+    install_requires=['distribute', 'Fabric>=1.4.3'],
+    test_require=[],
+    test_suite='tests',
     entry_points={
         'console_scripts': [
             'fabc = fabric_colors.main:main',
