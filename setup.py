@@ -15,6 +15,7 @@ setup(
     entry_points={
         'console_scripts': [
             'fabc = fabric_colors.main:main',
+            'fabc-quickstart = fabric_colors.quickstart:quickstart',
         ]
     }
 )
