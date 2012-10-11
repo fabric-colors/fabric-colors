@@ -61,7 +61,7 @@ def mkvirtualenv(target):
     Create the virtualenv for our project on the target machine. `fab mkvirtualenv:dev`
     """
     _env_get(target)
-    run('mkvirtualenv -p python2.7 %s' % (env.project_name))
+    run('mkvirtualenv -p python2.7 --distribute %s' % (env.project_name))
 
 
 def prepare_deploy_env(target):
