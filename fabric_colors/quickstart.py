@@ -1,9 +1,12 @@
 import os
+import shutil
 
 from colorama import init, Fore, Style
 init()
 
 from configobj import ConfigObj
+
+import fabric_colors
 
 
 def quickstart():
@@ -71,6 +74,31 @@ def quickstart():
         print nodes
 
         a = None
+
+    # Create fabfile.py
+    create_fabfile(project_root)
+
+
+def create_fabfile(project_root):
+    """
+    Creates a fabfile.py in the given project_root if it does not exist.
+    """
+    #project_root = raw_input("Your project root is [" + Fore.GREEN + "{0}".format(project_root) \
+            #+ Style.RESET_ALL + "]: ")
+    src = os.path.join(fabric_colors.__path__[0], 'fabfile.py.sample')
+    dest = os.path.join(project_root, 'fabfile.py')
+    if not dest:
+        print "You are not in a virtualenv. So please specify the destination \
+                directory for your fabfile.py"
+        dest = os.path.join(os.getcwd(), 'fabfile.py')
+        dest = raw_input("Destination [e.g. " + Fore.GREEN + "%s" + \
+                Style.RESET_ALL + "]: " % dest)
+
+    print "Copying the sample fabfile.py.sample from " + Fore.GREEN + src + Style.RESET_ALL
+    print "To " + Fore.GREEN + dest + Style.RESET_ALL
+
+    shutil.copyfile(src, dest)
+    shutil.copystat(src, dest)
 
 
 def specify_nodes(name, nodes):
