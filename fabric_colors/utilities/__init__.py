@@ -1,5 +1,10 @@
+import os
+
 from fabric_colors.deployment import _env_get
 from fabric.api import env
+
+PROJECT_NAME = env.project_name
+PROJECT_SITES = env.project_sites
 
 
 def info(target="localhost"):
@@ -8,13 +13,12 @@ def info(target="localhost"):
     """
     try:
         from django.conf import settings
-        from fabsettings import PROJECT_NAME, PROJECT_SITES
-        print("Running with PROJECT_ROOT {0}".format(settings.PROJECT_ROOT))
         print("Our PROJECT_NAME is {0}".format(PROJECT_NAME))
         print("We currently have the following instances:")
-        for item in PROJECT_SITES:
-            print " * %s \n" % item
+        for k, v in PROJECT_SITES.iteritems():
+            print " * {0} {1}".format(k, v)
         _env_get(target)
+        print("\n")
         print("This is the environment details on {0}".format(target))
         print env
     except:

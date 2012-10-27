@@ -1,6 +1,6 @@
 from fabric.api import env, run
 from fabric_colors.deployment import _env_get
-from fabsettings import PROJECT_SITES
+PROJECT_SITES = env.project_sites
 
 
 def server_adduser(username, target):
@@ -16,7 +16,7 @@ def server_adduser(username, target):
         run('gpasswd -a {0} wheel'.format(username))
         print("We can now execute commands as this user on your target machine.")
         print("To avoid having to key in this user's password everytime we access the target machine, do:")
-        print("ssh-copy-id -i ~/.ssh/id_rsa.pub {0}@{1}".format(username, PROJECT_SITES[target]['NAME']))
+        print("ssh-copy-id -i ~/.ssh/id_rsa.pub {0}@{1}".format(username, PROJECT_SITES[target]['name']))
     print("user {0} already exists on {1}. Not adding.".format(username, target))
 
 
