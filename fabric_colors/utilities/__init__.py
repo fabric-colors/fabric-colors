@@ -1,7 +1,10 @@
-import os
+__all__ = ['info', 'django_create_public', 'django_collectstatic']
 
 from fabric_colors.deployment import _env_get
 from fabric.api import env
+
+from fabric_colors.utilities.django_conventions import \
+        django_collectstatic, django_create_public
 
 PROJECT_NAME = env.project_name
 PROJECT_SITES = env.project_sites
@@ -9,10 +12,9 @@ PROJECT_SITES = env.project_sites
 
 def info(target="localhost"):
     """
-    Show the details relating to the current project, given an optional machine target (defaults to "localhost" if not provided). e.g. `fab info:dev`
+    Usage: `fab info:dev`. Show the details relating to the current project, given an optional machine target (defaults to "localhost" if not provided).
     """
     try:
-        from django.conf import settings
         print("Our PROJECT_NAME is {0}".format(PROJECT_NAME))
         print("We currently have the following instances:")
         for k, v in PROJECT_SITES.iteritems():
@@ -22,4 +24,4 @@ def info(target="localhost"):
         print("This is the environment details on {0}".format(target))
         print env
     except:
-        print "This is not a django project"
+            print "This is not a django project"
