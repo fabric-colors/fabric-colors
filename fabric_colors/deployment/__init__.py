@@ -1,5 +1,7 @@
 __all__ = ['deploy', 'mkvirtualenv']
 
+import os
+import sys
 import subprocess
 
 from fabric.api import env, run, sudo, require
@@ -9,7 +11,7 @@ from fabric_colors.deployment.git import git_branch_check, git_archive_and_uploa
 from fabric_colors.utilities.django_conventions import django_collectstatic
 
 
-def deploy(target):
+def deploy(target, email=False):
     """
     Usage: `fab deploy:dev`. Execute a deployment to the given target machine.
     """
@@ -21,6 +23,29 @@ def deploy(target):
         pip_install_requirements()
         symlink_current_release()
         django_collectstatic(target)
+        if email:
+            # dynamic import for the right target's settings
+            import_string = "from {0}.settings.{1} import *".\
+                    format(env.project_name, target)
+            exec import_string
+
+            # Execute email
+            from django.core.mail import EmailMessage, BadHeaderError
+            from django.core import mail
+            print dir(mail)
+            subject = 'Deployed to {0}'.format(target)
+            message = 'Deployed to {0}'.format(target)
+            from_address = DEFAULT_FROM_EMAIL
+            admin_emails = [a[1] for a in ADMINS]
+            em = EmailMessage(subject, message, from_address, admin_emails)
+
+            try:
+                mail_connection = mail.get_connection()
+                mail_connection.send_messages([em])
+                print("Deployment notification sent to {0}".format(str(admin_emails)[1:-1]))
+            except BadHeaderError, e:
+                print e
+                print("Invalid header found.")
 
 
 def mkvirtualenv(target):
