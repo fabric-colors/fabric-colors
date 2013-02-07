@@ -1,10 +1,10 @@
-__all__ = ['info', 'django_create_public', 'django_collectstatic']
+__all__ = ['info', 'django_create_public', 'django_collectstatic', 'django_compilemessages']
 
 from fabric_colors.deployment import _env_get
 from fabric.api import env
 
 from fabric_colors.utilities.django_conventions import \
-        django_collectstatic, django_create_public
+        django_collectstatic, django_create_public, django_compilemessages
 
 PROJECT_NAME = env.project_name
 PROJECT_SITES = env.project_sites

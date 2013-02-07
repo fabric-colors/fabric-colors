@@ -40,3 +40,16 @@ def django_collectstatic(target):
                 run("python manage.py collectstatic --noinput --settings=%s.settings.%s" % (env.project_name, target))
             else:
                 run("python manage.py collectstatic --noinput")
+
+
+def django_compilemessages(target):
+    """
+    Usage: `fab django_compilemessages:dev`. Run `python manage.py compilemessages` on specified target.
+    """
+    _env_get(target)
+    with prefix(env.activate):
+        with cd(env.path_release_current):
+            if target == "dev" or target == "prod":
+                run("python manage.py compilemessages --settings=%s.settings.%s" % (env.project_name, target))
+            else:
+                run("python manage.py compilemessages")
