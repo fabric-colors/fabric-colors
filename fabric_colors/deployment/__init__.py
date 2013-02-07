@@ -8,7 +8,7 @@ from fabric.api import env, run, sudo, require
 from fabric.context_managers import prefix, cd, hide, settings as fabconfig
 from fabric_colors.environment import _env_get
 from fabric_colors.deployment.git import git_branch_check, git_archive_and_upload_tar
-from fabric_colors.utilities.django_conventions import django_collectstatic
+from fabric_colors.utilities.django_conventions import django_collectstatic, django_compilemessages
 
 
 def deploy(target, email=False):
@@ -23,6 +23,10 @@ def deploy(target, email=False):
         pip_install_requirements()
         symlink_current_release()
         django_collectstatic(target)
+        try:
+            django_compilemessages(target)
+        except:
+            pass
         if email:
             # dynamic import for the right target's settings
             import_string = "from {0}.settings.{1} import *".\
