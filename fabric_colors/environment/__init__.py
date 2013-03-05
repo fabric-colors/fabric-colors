@@ -25,6 +25,7 @@ def _env_get(target):
         env.user = env.local_user
         return
     elif target not in list(env.project_sites.viewkeys()):
+        print 3, target
         # handle environment that isn't specified
         print ("Oops. There's no such site. try `fab _env_get:dev` or `fab env_get:prod`")
         return
@@ -37,3 +38,4 @@ def _env_get(target):
     env.path_releases = '/var/www/%s/%s/releases' % (target, env.project_name)
     env.path_release_current = '/var/www/%s/%s/releases/current' % (target, env.project_name)
     env.project_path = '%(path_release_current)s/%(project_name)s' % env  # slash prepended
+    env.test = env.project_sites[target].get('TEST', False)

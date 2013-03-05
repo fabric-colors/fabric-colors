@@ -1,7 +1,5 @@
 __all__ = ['deploy', 'mkvirtualenv']
 
-import os
-import sys
 import subprocess
 
 from fabric.api import env, run, sudo, require
@@ -11,6 +9,12 @@ from fabric_colors.deployment.git import git_branch_check, git_archive_and_uploa
 from fabric_colors.utilities.django_conventions import django_collectstatic, django_compilemessages
 
 
+def test_node_check(target):
+    print "Target node %s is designated as a test node." % target
+    print "This means that we can deploy to it from any git branch."
+    return env.test
+
+
 def deploy(target, email=False):
     """
     Usage: `fab deploy:dev`. Execute a deployment to the given target machine.
@@ -18,7 +22,7 @@ def deploy(target, email=False):
     _env_get(target)
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
-    if git_branch_check():
+    if git_branch_check() or test_node_check(target):
         git_archive_and_upload_tar()
         pip_install_requirements()
         symlink_current_release()
@@ -36,11 +40,12 @@ def deploy(target, email=False):
             # Execute email
             from django.core.mail import EmailMessage, BadHeaderError
             from django.core import mail
+            from django.conf import settings
             print dir(mail)
             subject = 'Deployed to {0}'.format(target)
             message = 'Deployed to {0}'.format(target)
-            from_address = DEFAULT_FROM_EMAIL
-            admin_emails = [a[1] for a in ADMINS]
+            from_address = settings.DEFAULT_FROM_EMAIL
+            admin_emails = [a[1] for a in settings.ADMINS]
             em = EmailMessage(subject, message, from_address, admin_emails)
 
             try:
