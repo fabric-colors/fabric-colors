@@ -27,10 +27,6 @@ def deploy(target, email=False):
         pip_install_requirements()
         symlink_current_release()
         django_collectstatic(target)
-        try:
-            django_compilemessages(target)
-        except:
-            pass
         if email:
             # dynamic import for the right target's settings
             import_string = "from {0}.settings.{1} import *".\
