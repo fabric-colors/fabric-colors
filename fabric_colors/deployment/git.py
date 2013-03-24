@@ -33,8 +33,9 @@ def git_archive_and_upload_tar(target):
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
     env.git_branch = current_branch
     local('git archive --format=tar %(git_branch)s > %(release)s.tar' % env)
-    local('touch `git describe HEAD`.tag')
-    local('tar rvf %(release)s.tar `git describe HEAD`.tag; rm `git describe HEAD`.tag' % env)
+    local('touch `git describe HEAD`-`git config --get user.email`.tag')
+    local('tar rvf %(release)s.tar `git describe HEAD`-`git config --get user.email`.tag; \
+            rm `git describe HEAD`-`git config --get user.email`.tag' % env)
     local('gzip %(release)s.tar' % env)
     _env_get(target)
     run('; mkdir -p %(path)s/releases/%(release)s' % env)
