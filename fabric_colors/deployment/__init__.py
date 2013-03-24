@@ -29,7 +29,7 @@ def deploy(target, email=False):
         return
 
     if git_branch_check() or test_node_check(target):
-        git_archive_and_upload_tar()
+        git_archive_and_upload_tar(target)
         pip_install_requirements()
         symlink_current_release()
         django_collectstatic(target)

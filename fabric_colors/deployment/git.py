@@ -3,6 +3,8 @@ import subprocess
 from fabric.api import env, run, local
 from fabric.contrib.project import rsync_project
 
+from fabric_colors.environment import _env_get
+
 
 def git_branch_check():
     """
@@ -21,7 +23,7 @@ def git_branch_check():
         return False
 
 
-def git_archive_and_upload_tar():
+def git_archive_and_upload_tar(target):
     """
     Create an archive from the current git branch and upload it to target machine.
     """
@@ -34,6 +36,7 @@ def git_archive_and_upload_tar():
     local('touch `git describe HEAD`.tag')
     local('tar rvf %(release)s.tar `git describe HEAD`.tag; rm `git describe HEAD`.tag' % env)
     local('gzip %(release)s.tar' % env)
+    _env_get(target)
     run('; mkdir -p %(path)s/releases/%(release)s' % env)
     run('; mkdir -p %(path)s/packages/' % env)
     rsync_project('%(path)s/packages/' % env, '%(release)s.tar.gz' % env, extra_opts='-avz --progress')
