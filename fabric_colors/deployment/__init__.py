@@ -7,6 +7,13 @@ from fabric.context_managers import prefix, cd, hide, settings as fabconfig
 from fabric_colors.environment import _env_get
 from fabric_colors.deployment.git import git_branch_check, git_archive_and_upload_tar
 from fabric_colors.utilities.django_conventions import django_collectstatic
+from fabric_colors.utilities import chk_req
+
+
+def test_node_check(target):
+    print "Target node %s is designated as a test node." % target
+    print "This means that we can deploy to it from any git branch."
+    return env.test
 
 
 def test_node_check(target):
@@ -34,6 +41,11 @@ def deploy(email=0, *targets):
     _env_get(target)
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
+
+    if not chk_req():
+        print("\nNOT DEPLOYING because the dependencies installed in your current environment do not match the requirements.txt file.")
+        return
+
     if git_branch_check() or test_node_check(target):
         git_archive_and_upload_tar()
         pip_install_requirements()
