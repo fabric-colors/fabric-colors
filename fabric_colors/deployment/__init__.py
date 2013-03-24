@@ -16,6 +16,12 @@ def test_node_check(target):
     return env.test
 
 
+def test_node_check(target):
+    print "Target node %s is designated as a test node." % target
+    print "This means that we can deploy to it from any git branch."
+    return env.test
+
+
 def deploy(email=0, *targets):
     """
     Usage: `fab deploy:dev`. Execute a deployment to the given target machine. fab deploy:1,dev if we want email notification to ADMINS

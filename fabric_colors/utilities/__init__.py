@@ -11,6 +11,9 @@ from fabric_colors.utilities.django_conventions import (django_collectstatic,
         django_create_public, django_compilemessages, django_makemessages)
 from fabric_colors.utilities.backups import (postgres_backup, media_backup)
 
+from fabric_colors.utilities.backups import \
+        postgres_backup, media_backup
+
 
 PROJECT_NAME = env.project_name
 PROJECT_SITES = env.project_sites
