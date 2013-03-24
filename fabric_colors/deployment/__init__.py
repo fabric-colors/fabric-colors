@@ -16,28 +16,10 @@ def test_node_check(target):
     return env.test
 
 
-def test_node_check(target):
-    print "Target node %s is designated as a test node." % target
-    print "This means that we can deploy to it from any git branch."
-    return env.test
-
-
-def deploy(email=0, *targets):
+def deploy(target, email=False):
     """
-    Usage: `fab deploy:dev`. Execute a deployment to the given target machine. fab deploy:1,dev if we want email notification to ADMINS
+    Usage: `fab deploy:dev`. Execute a deployment to the given target machine.
     """
-    if not targets and not isinstance(email, int):
-        # no targets specified and email isn't an integer
-        # make an educated guess that user has provided first argument
-        # as the node name
-        target = email
-        _env_get(target)
-        if target not in list(env.project_sites.viewkeys()):
-            print ("Oops. There's no such site. try `fab _env_get:dev` or `fab env_get:prod`")
-            return
-    else:
-        target = targets[0]
-
     _env_get(target)
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
