@@ -5,14 +5,11 @@ __all__ = ['info', 'django_create_public', 'django_makemessages',
 import subprocess
 
 from fabric_colors.deployment import _env_get
-from fabric.api import env, local
+from fabric.api import env
 
 from fabric_colors.utilities.django_conventions import (django_collectstatic,
         django_create_public, django_compilemessages, django_makemessages)
 from fabric_colors.utilities.backups import (postgres_backup, media_backup)
-
-from fabric_colors.utilities.backups import \
-        postgres_backup, media_backup
 
 
 PROJECT_NAME = env.project_name

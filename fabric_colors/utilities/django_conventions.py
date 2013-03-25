@@ -29,13 +29,18 @@ def django_create_public():
         f.close()
 
 
-def django_collectstatic(target):
+def django_collectstatic(target, deploy=False):
     """
     Usage: `fab django_collectstatic:dev`. Run `python manage.py collectstatic` on specified target.
     """
     _env_get(target)
     with prefix(env.activate):
-        with cd(env.path_release_current):
+        if deploy:
+            working_directory = '%(path)s/releases/%(release)s' % env
+        else:
+            working_directory = env.path_release_current
+        with cd(working_directory):
+            #TODO: disable hardcoded target names. Dynamically looking for the correct settings file.
             if target == "dev" or target == "prod":
                 run("python manage.py collectstatic --noinput --settings=%s.settings.%s" % (env.project_name, target))
             else:
