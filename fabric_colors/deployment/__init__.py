@@ -7,6 +7,7 @@ from fabric.context_managers import prefix, cd, hide, settings as fabconfig
 from fabric_colors.environment import _env_get
 from fabric_colors.deployment.git import git_branch_check, git_archive_and_upload_tar
 from fabric_colors.utilities.django_conventions import django_collectstatic
+from fabric_colors.utilities.emails import email_on_success
 from fabric_colors.utilities import chk_req
 
 
@@ -25,38 +26,14 @@ def deploy(target, email=False):
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
 
     if not chk_req():
-        print("\nNOT DEPLOYING because the dependencies installed in your current environment do not match the requirements.txt file.")
         return
 
     if git_branch_check() or test_node_check(target):
         git_archive_and_upload_tar(target)
         pip_install_requirements()
+        django_collectstatic(target, deploy=True)
         symlink_current_release()
-        django_collectstatic(target)
-        if email:
-            # dynamic import for the right target's settings
-            import_string = "from {0}.settings.{1} import *".\
-                    format(env.project_name, target)
-            exec import_string
-
-            # Execute email
-            from django.core.mail import EmailMessage, BadHeaderError
-            from django.core import mail
-            from django.conf import settings
-            print dir(mail)
-            subject = 'Deployed to {0}'.format(target)
-            message = 'Deployed to {0}'.format(target)
-            from_address = settings.DEFAULT_FROM_EMAIL
-            admin_emails = [a[1] for a in settings.ADMINS]
-            em = EmailMessage(subject, message, from_address, admin_emails)
-
-            try:
-                mail_connection = mail.get_connection()
-                mail_connection.send_messages([em])
-                print("Deployment notification sent to {0}".format(str(admin_emails)[1:-1]))
-            except BadHeaderError, e:
-                print e
-                print("Invalid header found.")
+        email_on_success(target, trigger=email)
 
 
 def mkvirtualenv(target):
