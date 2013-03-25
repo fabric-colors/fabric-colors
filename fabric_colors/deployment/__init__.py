@@ -72,18 +72,22 @@ def symlink_current_release():
     Symlink our current release
     """
     require('release', provided_by=[deploy])
-    with cd(env.path):
+    with cd(env.path_releases):
         if symlink_check():
-            run('cd releases; rm current; ln -s %(release)s current' % env)
+            run('rm current; ln -s %(release)s current' % env)
+            print('Removed current symlink and pointing at new release %(release)s.' % env)
         else:
-            run('cd releases; ln -s %(release)s current' % env)
+            run('ln -s %(release)s current' % env)
+            print('Pointing at new release %(release)s.' % env)
 
 
 def symlink_check():
     """
     Check the hash pointing to the current symlink
     """
-    with cd(env.path):
-        cmd = "cd releases; [ -d current ] && echo '1'"
+    with cd(env.path_releases):
+        print('Current release is %(release)s' % env)
+        cmd = "[ -d current ] && echo '1'"
         with fabconfig(hide('everything'), warn_only=True):
-            return bool(run(cmd))
+            result = run(cmd)
+            return result
