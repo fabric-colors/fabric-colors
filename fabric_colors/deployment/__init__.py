@@ -109,10 +109,11 @@ def releases_list(target, show=True):
         result_list = [item.strip() for item in result_list]  # clean up whitespaces
         if not fabsettings.PROJECT_NAME:
             print("Please define your PROJECT_NAME in fabsettings.py")
+
+        # Exclude 'current' symlink and directories starting with the same
+        # project_name
         result_list[:] = [item for item in result_list if item != 'current']
-        for item in result_list:
-            if re.match(fabsettings.PROJECT_NAME, item):
-                result_list.remove(item)
+        result_list[:] = [item for item in result_list if not re.match(fabsettings.PROJECT_NAME, item)]
 
         num = len(result_list)
         print("Number of release directories on {0} = {1}".format(target, num))
@@ -132,8 +133,8 @@ def releases_cleanup(target, n=None):
         # Otherwise, we will use what we have in fabsettings or default to 10
         n = fabsettings.PROJECT_SITES[target].get('NUM_RELEASES', 10)
 
-    if n <= 1:
-        print("'n' must be 1 or more")
+    if n <= 2:
+        print("'n' must be 2 or more")
         return
 
     result_list, num = releases_list(target)
@@ -142,8 +143,10 @@ def releases_cleanup(target, n=None):
         return
 
     _env_get(target)
-    print("Trimming release directores to {0} on {1}".format(n, target))
-    n_plus_one = n + 1
-    cmd = "ls -1tr | grep -v '{0}*' | grep -v 'current' | tail -n {1} | xargs -d '\n' rm -rf".format(fabsettings.PROJECT_NAME, n_plus_one)
-    run(cmd)
+    total_to_trim = num - n
+    print("Trimming release directories from {0} to {1} on {2}".format(total_to_trim, n, target))
+    print("A total of {0} release directories will be deleted".format(total_to_trim))
+    with cd(env.path_releases):
+        cmd = "ls -1tr | grep -v '{0}*' | grep -v 'current' | head -n {1} | xargs -d '\\n' rm -rf".format(fabsettings.PROJECT_NAME, total_to_trim)
+        run(cmd)
     releases_list(target, False)
