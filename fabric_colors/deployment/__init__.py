@@ -1,5 +1,6 @@
-__all__ = ['deploy', 'mkvirtualenv']
+__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup']
 
+import re
 import subprocess
 
 from fabric.api import env, run, sudo, require
@@ -9,6 +10,8 @@ from fabric_colors.deployment.git import git_branch_check, git_archive_and_uploa
 from fabric_colors.utilities.django_conventions import django_collectstatic
 from fabric_colors.utilities.emails import email_on_success
 from fabric_colors.utilities import chk_req
+
+import fabsettings
 
 
 def test_node_check(target):
@@ -33,6 +36,7 @@ def deploy(target, email=False):
         pip_install_requirements()
         django_collectstatic(target, deploy=True)
         symlink_current_release()
+        releases_cleanup(target)
         email_on_success(target, trigger=email)
 
 
@@ -91,3 +95,55 @@ def symlink_check():
         with fabconfig(hide('everything'), warn_only=True):
             result = run(cmd)
             return result
+
+
+def releases_list(target, show=True):
+    """
+    Returns a list of deploy directories.
+    """
+    _env_get(target)
+    with cd(env.path_releases):
+        cmd = "ls -tm ."
+        result = run(cmd)
+        result_list = result.split(",")
+        result_list = [item.strip() for item in result_list]  # clean up whitespaces
+        if not fabsettings.PROJECT_NAME:
+            print("Please define your PROJECT_NAME in fabsettings.py")
+        result_list[:] = [item for item in result_list if item != 'current']
+        for item in result_list:
+            if re.match(fabsettings.PROJECT_NAME, item):
+                result_list.remove(item)
+
+        num = len(result_list)
+        print("Number of release directories on {0} = {1}".format(target, num))
+        if show == True:
+            print(result_list)
+        return result_list, num
+
+
+def releases_cleanup(target, n=None):
+    """
+    Ensure that target node only has `n` most recent deployed directories, where `n` by default is 10 but can be overridden by that node's settings in fabsettings.
+    """
+    if n:
+        # If user provides n, we will override our fabsettings/default attributes and use user-provided value
+        n = int(n)
+    else:
+        # Otherwise, we will use what we have in fabsettings or default to 10
+        n = fabsettings.PROJECT_SITES[target].get('NUM_RELEASES', 10)
+
+    if n <= 1:
+        print("'n' must be 1 or more")
+        return
+
+    result_list, num = releases_list(target)
+    if num <= n:
+        print("Only {0} release directories on {1} at the moment. Which is already less than or equal to what you want to trim to: {2}".format(num, target, n))
+        return
+
+    _env_get(target)
+    print("Trimming release directores to {0} on {1}".format(n, target))
+    n_plus_one = n + 1
+    cmd = "ls -1tr | grep -v '{0}*' | grep -v 'current' | tail -n {1} | xargs -d '\n' rm -rf".format(fabsettings.PROJECT_NAME, n_plus_one)
+    run(cmd)
+    releases_list(target, False)
