@@ -3,6 +3,7 @@ __all__ = ['info', 'django_create_public', 'django_makemessages',
 'media_backup', 'chk_req']
 
 import subprocess
+from pprint import pprint
 
 from fabric_colors.deployment import _env_get
 from fabric.api import env
@@ -29,9 +30,9 @@ def info(target="localhost"):
         _env_get(target)
         print("\n")
         print("This is the environment details on {0}".format(target))
-        print env
+        pprint(env)
     except:
-            print "This is not a django project"
+        print "This is not a django project"
 
 
 def chk_req():

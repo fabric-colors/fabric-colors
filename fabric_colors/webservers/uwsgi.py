@@ -1,9 +1,23 @@
 import time
 
-from fabric.api import run, env
+from fabric.api import run, env, hide
 from fabric.context_managers import prefix, cd, settings as fabconfig
 
 from fabric_colors.deployment import _env_get
+
+
+def _uwsgi_chk_log(target):
+    print("Checking if we have a log directory and file for our uwsgi process")
+    cmd = "[ -d {0}/{1}_uwsgi ] && echo '1'".format(env.path_releases, env.project_name)
+    result = run(cmd)
+    return result
+
+
+def _uwsgi_mk_log(target):
+    cmd = "mkdir -p {0}/{1}_uwsgi".format(env.path_releases, env.project_name)
+    cmd2 = "touch {0}/{1}_uwsgi/{2}.log".format(env.path_releases, env.project_name, env.project_name)
+    run(cmd)
+    run(cmd2)
 
 
 def _uwsgi_status(target):
@@ -25,6 +39,9 @@ def _uwsgi_start(target, env, newrelic):
                 % (env.path_release_current, env.project_path, target))
     else:
         print("Starting uwsgi")
+        result = _uwsgi_chk_log(target)
+        if not result:
+            _uwsgi_mk_log(target)
         run("uwsgi --ini %s/uwsgi_%s.ini" % (env.project_path, target))
 
 
