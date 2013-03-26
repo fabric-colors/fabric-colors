@@ -2,6 +2,7 @@ import os
 import subprocess
 
 from fabric.api import env
+import fabsettings
 
 
 def _env_get(target):
@@ -33,8 +34,8 @@ def _env_get(target):
     env.user = 'web'
     env.hosts = [env.project_sites[target]['NAME']]
     env.host_string = env.hosts[0]
-    env.path = '/var/www/%s/%s' % (target, env.project_name)
-    env.path_releases = '/var/www/%s/%s/releases' % (target, env.project_name)
-    env.path_release_current = '/var/www/%s/%s/releases/current' % (target, env.project_name)
+    env.path = fabsettings.PROJECT_SITES[target].get('PATH', '/var/www/%s/%s' % (target, env.project_name))
+    env.path_releases = fabsettings.PROJECT_SITES[target].get('PATH_RELEASES', '/var/www/%s/%s/releases' % (target, env.project_name))
+    env.path_release_current = fabsettings.PROJECT_SITES[target].get('PATH_RELEASE_CURRENT', '/var/www/%s/%s/releases/current' % (target, env.project_name))
     env.project_path = '%(path_release_current)s/%(project_name)s' % env  # slash prepended
     env.test = env.project_sites[target].get('TEST', False)
