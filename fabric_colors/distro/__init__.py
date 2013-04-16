@@ -1,6 +1,7 @@
 from fabric.api import env, run, local
 from fabric_colors.deployment import _env_get
 import fabsettings
+import subprocess
 
 
 def server_adduser(username, target, pubkey=True):
@@ -126,3 +127,15 @@ def server_setup(username, target):
         from fabric_colors.distro.arch import server_postgresql_status
         server_postgresql_status(username, target)
         #server_postgresql(username, target, distro)
+
+
+def get_ownership(path, target):
+    """
+    Given a path, and the target node, return owner and group for that directory
+    """
+    _env_get(target)
+    cmd = "ls -ld %s | awk \'{print $3}\'" % path
+    cmd2 = "ls -ld %s | awk \'{print $4}\'" % path
+    owner = run(cmd)
+    group = run(cmd2)
+    return owner, group
