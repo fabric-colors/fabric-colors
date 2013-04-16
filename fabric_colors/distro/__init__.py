@@ -1,9 +1,9 @@
-from fabric.api import env, run
+from fabric.api import env, run, local
 from fabric_colors.deployment import _env_get
-PROJECT_SITES = env.project_sites
+import fabsettings
 
 
-def server_adduser(username, target):
+def server_adduser(username, target, pubkey=True):
     """
     Create user given the user name & target machine. e.g. `fab server_adduser:web,dev`
     """
@@ -15,9 +15,21 @@ def server_adduser(username, target):
         run('passwd {0}'.format(username))
         run('gpasswd -a {0} wheel'.format(username))
         print("We can now execute commands as this user on your target machine.")
-        print("To avoid having to key in this user's password everytime we access the target machine, do:")
-        print("ssh-copy-id -i ~/.ssh/id_rsa.pub {0}@{1}".format(username, PROJECT_SITES[target]['name']))
+        if pubkey:
+            print("Add your public key to {0}@{1}".format(username, fabsettings.PROJECT_SITES[target]['NAME']))
+            server_addpubkey(username, target)
+        else:
+            print("Not adding your public key")
+            print("To avoid having to key in this user's password everytime we access the target machine, do:")
+            print("ssh-copy-id -i ~/.ssh/id_rsa.pub {0}@{1}".format(username, fabsettings.PROJECT_SITES[target]['NAME']))
     print("user {0} already exists on {1}. Not adding.".format(username, target))
+
+
+def server_addpubkey(username, target):
+    """
+    Add local machine's public key to target's username
+    """
+    local("ssh-copy-id -i ~/.ssh/id_rsa.pub {0}@{1}".format(username, fabsettings.PROJECT_SITES[target]['NAME']))
 
 
 def server_deluser(username, target):
