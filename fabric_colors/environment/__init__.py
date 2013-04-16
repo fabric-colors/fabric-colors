@@ -40,4 +40,6 @@ def _env_get(target):
     env.project_path = '%(path_release_current)s/%(project_name)s' % env  # slash prepended
     env.virtualenv = fabsettings.PROJECT_SITES[target].get('VIRTUALENV', env.project_name)
     env.activate = 'source ~/.bash_profile; source `which virtualenvwrapper.sh`; workon {0}'.format(env.virtualenv)
+    env.webserver_type = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('TYPE', 'uwsgi')
+    env.webserver_port = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('PORT', '3030')
     env.test = env.project_sites[target].get('TEST', False)
