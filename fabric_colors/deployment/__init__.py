@@ -33,7 +33,7 @@ def deploy(target, email=False):
 
     if git_branch_check() or test_node_check(target):
         git_archive_and_upload_tar(target)
-        pip_install_requirements()
+        pip_install_requirements(target)
         django_collectstatic(target, deploy=True)
         symlink_current_release()
         releases_cleanup(target)
@@ -45,7 +45,7 @@ def mkvirtualenv(target):
     Create the virtualenv for our project on the target machine. `fab mkvirtualenv:dev`
     """
     _env_get(target)
-    run('mkvirtualenv -p python2.7 --distribute %s' % (env.project_name))
+    run('mkvirtualenv -p python2.7 --distribute %s' % (env.virtualenv))
 
 
 def prepare_deploy_env(target):
@@ -62,10 +62,11 @@ def prepare_deploy_env(target):
         print("{0} already exists".format(env.path_releases))
 
 
-def pip_install_requirements():
+def pip_install_requirements(target):
     """
     Install the required python packages from the requirements.txt file using pip
     """
+    _env_get(target)
     require('release', provided_by=[deploy])
     with prefix(env.activate):
         run('&& pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
