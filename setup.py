@@ -2,14 +2,14 @@ from setuptools import setup
 
 setup(
     name='Fabric Colors',
-    version='0.9.23',
+    version='0.9.24',
     packages=['fabric_colors', ],
     license='LICENSE',
     description='Reusable fabric functions',
     long_description=open('README.md').read(),
     author='Calvin Cheng',
     author_email='calvin@calvinx.com',
-    install_requires=['distribute', 'colorama', 'configobj', 'Fabric>=1.4.3'],
+    install_requires=['distribute', 'colorama', 'configobj', 'Fabric>=1.6.0'],
     tests_require=[],
     test_suite='fabric_colors.tests',
     entry_points={
