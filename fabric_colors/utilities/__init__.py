@@ -11,25 +11,25 @@ from fabric.api import env
 from fabric_colors.utilities.django_conventions import (django_collectstatic,
         django_create_public, django_compilemessages, django_makemessages)
 from fabric_colors.utilities.backups import (postgres_backup, media_backup)
+from fabric_colors.environment import set_target_env
+from fabric.colors import green, cyan, red
 
 
 PROJECT_NAME = env.project_name
 PROJECT_SITES = env.project_sites
 
 
-def info(target="localhost"):
+@set_target_env
+def info():
     """
-    Usage: `fab info:dev`. Show the details relating to the current project,
-    given an optional machine target (defaults to "localhost" if not provided).
+    Usage: `fab -R dev info`. Show env details of target host "dev".
     """
     try:
-        print("Our PROJECT_NAME is {0}".format(PROJECT_NAME))
-        result = _env_set(target)
-        if result:
-            print("\nThis is the environment details on {0}".format(target))
-            pprint(env)
+        print(green("Our PROJECT_NAME is ") + cyan("{0}".format(PROJECT_NAME)))
+        print(green("This is the env variables for host ") + cyan("{0}".format(env.host)))
+        pprint(env)
     except:
-        print("You have not configured your fabsettings properly.")
+        print(red("You have not configured your fabsettings properly."))
 
 
 def chk_req():

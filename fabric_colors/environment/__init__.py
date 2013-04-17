@@ -67,7 +67,7 @@ def set_target_env(f):
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        for key, value in env.project_sites.iteritems():
+        for key, value in fabsettings.PROJECT_SITES.iteritems():
             # key is the identifier, e.g. "dev", "prod", etc etc
             for k, v in value.iteritems():
                 if v == env.host:
@@ -75,5 +75,5 @@ def set_target_env(f):
                     # if the nested dictionary's name is equivalent to env.host
                     # we will set our global state env with _env_set(key)
                     _env_set(key)
-            return f(*args, **kwargs)
-        return wrapper
+        return f(*args, **kwargs)
+    return wrapper
