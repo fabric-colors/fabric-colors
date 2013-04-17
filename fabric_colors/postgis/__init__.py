@@ -1,6 +1,6 @@
 from fabric.api import run, local
 
-from fabric_colors.deployment import _env_set
+from fabric_colors.deploy import _env_set
 
 
 def create_postgis_template(target):

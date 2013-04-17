@@ -1,7 +1,7 @@
 import subprocess
 import fabsettings
 
-from fabric.api import env, run, local, sudo
+from fabric.api import env, run, local, sudo, task
 from fabric.contrib.project import rsync_project
 
 from fabric_colors.environment import _env_set
@@ -25,6 +25,7 @@ def git_branch_check():
         return False
 
 
+@task
 def git_archive_and_upload_tar(target):
     """
     Create an archive from the current git branch and upload it to target machine.

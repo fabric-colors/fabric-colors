@@ -1,13 +1,15 @@
-import datetime, os, sys
+import datetime
+import os
 from fabric.api import env, get, run
-from fabric_colors.deployment import _env_set
+from fabric_colors.deploy import _env_set
+
 
 def postgres_backup(target, local_path=None):
     """
     Usage: `fab postgres_backup:dev` `fab postgres_backup:dev,/path/to/backup/folder/`. Backups the target's database to local. Backup path defaults to [cwd]/backups/db/[target]/.
     """
     _env_set(target)
-    
+
     target_name = target
     if target == 'localhost':
         target_name = 'local'
@@ -24,8 +26,8 @@ def postgres_backup(target, local_path=None):
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     dump_file = "%(path)s/pg_dump_%(target)s_%(timestamp)s.db" % {
-        'path': dump_path, 
-        'target': target, 
+        'path': dump_path,
+        'target': target,
         'timestamp': timestamp,}
     dump_file_gz = "%(dump_file)s.gz" % {'dump_file': dump_file}
 
@@ -63,6 +65,7 @@ def postgres_backup(target, local_path=None):
     print("Removing remote dump file")
     run("rm %(dump_file_gz)s" % {'dump_file_gz': dump_file_gz})
 
+
 def media_backup(target="localhost", local_path=None):
     """
     Usage: `fab media_backup:dev` `fab media_backup:dev,/path/to/backup/folder/`. Backups the target's static files to local. Backup path defaults to [cwd]/backups/static/[target]/.
@@ -83,9 +86,9 @@ def media_backup(target="localhost", local_path=None):
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     gz_file = "%(path)s/static_%(target)s_%(timestamp)s.tar.gz" % {
-        'path': gz_path, 
-        'target': target, 
-        'timestamp': timestamp,}
+        'path': gz_path,
+        'target': target,
+        'timestamp': timestamp}
 
     static_path = env.project_sites.get(target, {}).get('STATIC_PATH', None)
     if static_path == None:

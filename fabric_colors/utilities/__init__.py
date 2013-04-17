@@ -5,7 +5,7 @@ __all__ = ['info', 'django_create_public', 'django_makemessages',
 import subprocess
 from pprint import pprint
 
-from fabric_colors.deployment import _env_set
+from fabric_colors.deploy import _env_set
 from fabric.api import env
 
 from fabric_colors.utilities.django_conventions import (django_collectstatic,

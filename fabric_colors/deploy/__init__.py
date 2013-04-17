@@ -1,4 +1,4 @@
-__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup']
+__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup', 'git_archive_and_upload_tar']
 
 import re
 import subprocess
@@ -6,7 +6,7 @@ import subprocess
 from fabric.api import env, run, sudo, require
 from fabric.context_managers import prefix, cd, hide, settings as fabconfig
 from fabric_colors.environment import _env_set
-from fabric_colors.deployment.git import git_branch_check, git_archive_and_upload_tar
+from fabric_colors.deploy.git import git_branch_check, git_archive_and_upload_tar
 from fabric_colors.utilities.django_conventions import django_collectstatic
 from fabric_colors.utilities.emails import email_on_success
 from fabric_colors.utilities import chk_req
