@@ -3,7 +3,7 @@ import time
 from fabric.api import run, env
 from fabric.context_managers import prefix, cd, settings as fabconfig
 
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 
 import fabsettings
 
@@ -47,20 +47,19 @@ def _uwsgi_start(target, env, newrelic=False):
     if newrelic:
         print("Starting uwsgi with NEW_RELIC_CONFIG_FILE")
         run("NEW_RELIC_CONFIG_FILE=%s/newrelic.ini \
-                newrelic-admin run-program uwsgi --ini %s/uwsgi_%s.ini"
-                % (env.path_release_current, env.project_path, target))
+                newrelic-admin run-program uwsgi --ini {0}/uwsgi_{1}.ini".format(env.path_release_current, env.project_path, target))
     else:
         print("Starting uwsgi")
         result = _uwsgi_chk_log(target)
         if not result:
             _uwsgi_mk_log(target)
-        run("uwsgi --ini %s/uwsgi_%s.ini" % (env.project_path, target))
+        run("uwsgi --ini {0}/uwsgi_{1}.ini".format(env.project_path, target))
 
 
 def _uwsgi_restart(target, env, newrelic):
     if _uwsgi_status(target):
         print("Restarting uwsgi processes gracefully")
-        run("kill -HUP `cat /tmp/%s.pid-3030`" % env.project_name)
+        run("kill -HUP `cat /tmp/{0}.pid-{1}`".format(env.project_name, env.webserver_port))
     else:
         print("uwsgi processes are already dead. executing a start.")
         _uwsgi_start(target, env, newrelic)
@@ -68,7 +67,7 @@ def _uwsgi_restart(target, env, newrelic):
 
 def _uwsgi_restart_violent(target, env, newrelic):
     print("Restarting uwsgi processes violently")
-    run("kill -INT `cat /tmp/%s.pid-3030`" % env.project_name)
+    run("kill -INT `cat /tmp/{0}.pid-{1}`".format(env.project_name, env.webserver_port))
     time.sleep(1)
     _uwsgi_start(target, env, newrelic)
 
@@ -78,7 +77,7 @@ def uwsgi(target, command, newrelic=False):
     e.g. `fab uwsgi:dev,restart`  possible options - start/stop/restart/restart_violent/status \
     and optional 3rd argument if present, will invoke newrelic call, assuming server has newrelic installed
     """
-    _env_get(target)
+    _env_set(target)
     with prefix(env.activate):
         with cd(env.path_release_current) and fabconfig(warn_only=True):
             if command == "start":
@@ -86,7 +85,7 @@ def uwsgi(target, command, newrelic=False):
                 _uwsgi_start(target, env, newrelic)
             elif command == "stop":
                 print("Stopping uwsgi processes")
-                run("uwsgi --stop /tmp/%s.pid-3030" % env.project_name)
+                run("uwsgi --stop /tmp/{0}.pid-{1}".format(env.project_name, env.webserver_port))
             elif command == "restart":
                 _uwsgi_restart(target, env, newrelic)
             elif command == "restart_violent":

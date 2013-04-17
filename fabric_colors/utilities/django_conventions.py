@@ -3,14 +3,14 @@ import os
 from fabric.api import env, run
 from fabric.context_managers import prefix, cd
 
-from fabric_colors.environment import _env_get
+from fabric_colors.environment import _env_set
 
 
 def django_create_public():
     """
     Usage: `fab django_create_public`. Create public directory for django media and static files in our localhost.
     """
-    _env_get(target="localhost")
+    _env_set(target="localhost")
     public_dir = os.path.join(env.project_path,
             env.project_name + "_public")
 
@@ -33,7 +33,7 @@ def django_collectstatic(target, deploy=False):
     """
     Usage: `fab django_collectstatic:dev`. Run `python manage.py collectstatic` on specified target.
     """
-    _env_get(target)
+    _env_set(target)
     with prefix(env.activate):
         if deploy:
             working_directory = '%(path)s/releases/%(release)s' % env
@@ -52,7 +52,7 @@ def django_makemessages(target, language):
     Usage: `fab django_makemessages:dev,de`. Run `python manage.py makemessages` on specified target and
     language
     """
-    _env_get(target)
+    _env_set(target)
     with prefix(env.activate):
         with cd(env.path_release_current):
             if target == "dev" or target == "prod":
@@ -65,7 +65,7 @@ def django_compilemessages(target):
     """
     Usage: `fab django_compilemessages:dev`. Run `python manage.py compilemessages` on specified target.
     """
-    _env_get(target)
+    _env_set(target)
     with prefix(env.activate):
         with cd(env.path_release_current):
             if target == "dev" or target == "prod":

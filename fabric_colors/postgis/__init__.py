@@ -1,10 +1,10 @@
 from fabric.api import run, local
 
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 
 
 def create_postgis_template(target):
-    _env_get(target)
+    _env_set(target)
     command_string = """
         POSTGIS_SQL_PATH=`pg_config --sharedir`/contrib/postgis-2.0
         # Creating the template spatial database.

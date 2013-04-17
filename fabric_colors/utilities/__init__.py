@@ -5,41 +5,38 @@ __all__ = ['info', 'django_create_public', 'django_makemessages',
 import subprocess
 from pprint import pprint
 
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 from fabric.api import env
 
 from fabric_colors.utilities.django_conventions import (django_collectstatic,
         django_create_public, django_compilemessages, django_makemessages)
 from fabric_colors.utilities.backups import (postgres_backup, media_backup)
+from fabric_colors.environment import set_target_env
+from fabric.colors import green, cyan, red
 
 
 PROJECT_NAME = env.project_name
 PROJECT_SITES = env.project_sites
 
 
-def info(target="localhost"):
+@set_target_env
+def info():
     """
-    Usage: `fab info:dev`. Show the details relating to the current project,
-    given an optional machine target (defaults to "localhost" if not provided).
+    Usage: `fab -R dev info`. Show env details of target host "dev".
     """
     try:
-        print("Our PROJECT_NAME is {0}".format(PROJECT_NAME))
-        print("We currently have the following instances:")
-        for k, v in PROJECT_SITES.iteritems():
-            print " * {0} {1}".format(k, v)
-        _env_get(target)
-        print("\n")
-        print("This is the environment details on {0}".format(target))
+        print(green("Our PROJECT_NAME is ") + cyan("{0}".format(PROJECT_NAME)))
+        print(green("This is the env variables for host ") + cyan("{0}".format(env.host)))
         pprint(env)
     except:
-        print "This is not a django project"
+        print(red("You have not configured your fabsettings properly."))
 
 
 def chk_req():
     """
     Usage `fab chk_req`. Check if the current requirements.txt file matches what is in user's virtualenv. Returns True or False.
     """
-    _env_get("localhost")
+    _env_set("localhost")
     env.warn_only = True
     path_to_req = env.project_path + "/requirements.txt"
     cmd = "/bin/bash -c 'diff -B <(sort {0}) <(pip freeze | sort)'".format(path_to_req)
