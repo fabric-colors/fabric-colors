@@ -9,7 +9,7 @@ setup(
     long_description=open('README.md').read(),
     author='Calvin Cheng',
     author_email='calvin@calvinx.com',
-    install_requires=['distribute', 'colorama', 'configobj', 'Fabric>=1.4.3'],
+    install_requires=['distribute', 'colorama', 'configobj', 'Fabric>=1.6.0'],
     tests_require=[],
     test_suite='fabric_colors.tests',
     entry_points={

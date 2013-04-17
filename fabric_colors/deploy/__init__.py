@@ -40,8 +40,8 @@ def deploy(email=False):
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
 
-    if not chk_req():
-        return
+    #if not chk_req():
+        #return
 
     if git_branch_check() or test_host_check():
         git_archive_and_upload_tar()
@@ -82,7 +82,7 @@ def pip_install_requirements():
     """
     require('release', provided_by=[deploy])
     with prefix(env.activate):
-        run('&& pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
+        run('pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
 
 
 def symlink_current_release():
@@ -155,7 +155,6 @@ def releases_cleanup(n=None):
         print("'n' must be 2 or more")
         return
 
-    print(99999, env.target)
     result_list, num = releases_list(env.target)
     if num <= n:
         print("Only {0} release directories on {1} at the moment. Which is already less than or equal to what you want to trim to: {2}".format(num, env.target, n))
