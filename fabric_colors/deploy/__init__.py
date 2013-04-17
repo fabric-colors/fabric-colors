@@ -40,8 +40,8 @@ def deploy(email=False):
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
 
-    #if not chk_req():
-        #return
+    if not chk_req():
+        return
 
     if git_branch_check() or test_host_check():
         git_archive_and_upload_tar()

@@ -32,7 +32,6 @@ def git_archive_and_upload_tar():
     """
     Create an archive from the current git branch and upload it to target machine.
     """
-    print(env)
     cmd = 'git branch | grep "*" | sed "s/* //"'
     current_branch = str(subprocess.Popen(cmd, \
             shell=True,\
