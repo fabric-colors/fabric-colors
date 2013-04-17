@@ -1,4 +1,4 @@
-__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup']
+__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup', 'pip_install_requirements']
 
 import re
 import subprocess
@@ -37,19 +37,23 @@ def deploy(email=False):
     """
     Usage: `fab -R all deploy` or fab -H mysite.com deploy`. Execute a deployment to the given groups of hosts or host
     """
-    env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
-            stdout=subprocess.PIPE).communicate()[0]).rstrip()
-
     if not chk_req():
         return
 
     if git_branch_check() or test_host_check():
+        release()
         git_archive_and_upload_tar()
         pip_install_requirements()
         django_collectstatic(deploy=True)
         symlink_current_release()
         releases_cleanup()
         email_on_success(trigger=email)
+
+
+def release():
+    env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
+            stdout=subprocess.PIPE).communicate()[0]).rstrip()
+    print(env.release)
 
 
 @task
@@ -75,14 +79,21 @@ def prepare_deploy_env(target):
         print("{0} already exists".format(env.path_releases))
 
 
+@task
 @set_target_env
 def pip_install_requirements():
     """
     Install the required python packages from the requirements.txt file using pip
     """
-    require('release', provided_by=[deploy])
+    result = None
+    if not env.get('release'):
+        release()
     with prefix(env.activate):
-        run('pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
+        result = run('pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
+
+    if not result:
+        print(red("pip install failed. Please manually debug the dependencies and compilation problem."))
+        exit()
 
 
 def symlink_current_release():
