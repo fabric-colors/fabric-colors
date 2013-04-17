@@ -24,15 +24,12 @@ def info(target="localhost"):
     """
     try:
         print("Our PROJECT_NAME is {0}".format(PROJECT_NAME))
-        print("We currently have the following instances:")
-        for k, v in PROJECT_SITES.iteritems():
-            print " * {0} {1}".format(k, v)
-        _env_set(target)
-        print("\n")
-        print("This is the environment details on {0}".format(target))
-        pprint(env)
+        result = _env_set(target)
+        if result:
+            print("\nThis is the environment details on {0}".format(target))
+            pprint(env)
     except:
-        print "This is not a django project"
+        print("You have not configured your fabsettings properly.")
 
 
 def chk_req():

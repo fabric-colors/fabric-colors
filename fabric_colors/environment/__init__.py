@@ -3,6 +3,8 @@ import subprocess
 from functools import wraps
 
 from fabric.api import env
+from fabric.colors import green, red
+
 import fabsettings
 
 
@@ -19,17 +21,23 @@ def _env_set(target):
         env.hosts = ["127.0.0.1:%s" % (ssh_config["Port"])]
         env.host_string = env.hosts[0]    # We need to explicitly specify this for sudo and run.
         env.key_filename = ssh_config["IdentityFile"]
-        return
+        return True
     elif target == 'localhost':
         # all environment variables relating to a developer's localhost
         env.project_home = os.getenv("PROJECT_HOME")
         env.project_path = '%(project_home)s/%(project_name)s' % env
         env.user = env.local_user
-        return
+        return True
     elif target not in list(env.project_sites.viewkeys()):
         # handle environment that isn't specified
-        print ("Oops. There's no such site. try `fab _env_set:dev` or `fab env_get:prod`")
-        return
+        print(red("Oops. There's no such node."))
+        if list(env.project_sites.viewkeys()):
+            print(green("Your specified nodes are:"))
+            for node in list(env.project_sites.viewkeys()):
+                print(green(node) + ": " + green(env.project_sites[node]))
+        else:
+            print(red("You don't have any nodes configured in your fabsettings' PROJECT_SITES yet"))
+        return None
 
     # handle environment that was specified
     env.user = fabsettings.PROJECT_SITES[target].get('USER', 'web')
@@ -44,6 +52,7 @@ def _env_set(target):
     env.webserver_type = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('TYPE', 'uwsgi')
     env.webserver_port = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('PORT', '3030')
     env.test = env.project_sites[target].get('TEST', False)
+    return True
 
 
 def set_target_env(f):
