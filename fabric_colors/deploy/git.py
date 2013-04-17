@@ -5,7 +5,7 @@ from fabric.api import env, run, local, sudo, task
 from fabric.contrib.project import rsync_project
 
 from fabric_colors.environment import set_target_env
-from fabric_colors.distro import get_ownership
+from fabric_colors.distro.server import get_ownership
 
 
 @task
@@ -43,7 +43,7 @@ def git_archive_and_upload_tar():
     local('tar rvf %(release)s.tar `git describe HEAD`-`git config --get user.email`.tag; \
             rm `git describe HEAD`-`git config --get user.email`.tag' % env)
     local('gzip %(release)s.tar' % env)
-    current_owner, current_group = get_ownership(env.path, env.target)
+    current_owner, current_group = get_ownership(env.path)
     deploying_user = fabsettings.PROJECT_SITES[env.target].get('USER', 'web')
     deploying_group = fabsettings.PROJECT_SITES[env.target].get('GROUP', deploying_user)
     if current_owner != deploying_user:

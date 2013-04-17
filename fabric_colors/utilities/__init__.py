@@ -5,20 +5,21 @@ __all__ = ['info', 'django_create_public', 'django_makemessages',
 import subprocess
 from pprint import pprint
 
-from fabric_colors.deploy import _env_set
-from fabric.api import env
+from fabric.api import env, task
+from fabric.colors import green, cyan, red
 
+from fabric_colors.deploy import _env_set
 from fabric_colors.utilities.django_conventions import (django_collectstatic,
         django_create_public, django_compilemessages, django_makemessages)
 from fabric_colors.utilities.backups import (postgres_backup, media_backup)
 from fabric_colors.environment import set_target_env
-from fabric.colors import green, cyan, red
 
 
 PROJECT_NAME = env.project_name
 PROJECT_SITES = env.project_sites
 
 
+@task
 @set_target_env
 def info():
     """
