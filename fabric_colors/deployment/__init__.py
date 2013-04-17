@@ -5,7 +5,7 @@ import subprocess
 
 from fabric.api import env, run, sudo, require
 from fabric.context_managers import prefix, cd, hide, settings as fabconfig
-from fabric_colors.environment import _env_get
+from fabric_colors.environment import _env_set
 from fabric_colors.deployment.git import git_branch_check, git_archive_and_upload_tar
 from fabric_colors.utilities.django_conventions import django_collectstatic
 from fabric_colors.utilities.emails import email_on_success
@@ -24,7 +24,7 @@ def deploy(target, email=False):
     """
     Usage: `fab deploy:dev`. Execute a deployment to the given target machine.
     """
-    _env_get(target)
+    _env_set(target)
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
 
@@ -44,7 +44,7 @@ def mkvirtualenv(target):
     """
     Create the virtualenv for our project on the target machine. `fab mkvirtualenv:dev`
     """
-    _env_get(target)
+    _env_set(target)
     run('mkvirtualenv -p python2.7 --distribute %s' % (env.virtualenv))
 
 
@@ -52,7 +52,7 @@ def prepare_deploy_env(target):
     """
     Make sure that we have the release directories before executing deployment.
     """
-    _env_get(target)
+    _env_set(target)
     result = run('; if [ -d "{0}" ]; then echo 1; else echo ""; fi'.format(env.path_releases))
     print result.stdout
     if not result.stdout:
@@ -66,7 +66,7 @@ def pip_install_requirements(target):
     """
     Install the required python packages from the requirements.txt file using pip
     """
-    _env_get(target)
+    _env_set(target)
     require('release', provided_by=[deploy])
     with prefix(env.activate):
         run('&& pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
@@ -102,7 +102,7 @@ def releases_list(target, show=True):
     """
     Returns a list of deploy directories.
     """
-    _env_get(target)
+    _env_set(target)
     with cd(env.path_releases):
         cmd = "ls -tm ."
         result = run(cmd)
@@ -143,7 +143,7 @@ def releases_cleanup(target, n=None):
         print("Only {0} release directories on {1} at the moment. Which is already less than or equal to what you want to trim to: {2}".format(num, target, n))
         return
 
-    _env_get(target)
+    _env_set(target)
     total_to_trim = num - n
     print("Trimming release directories from {0} to {1} on {2}".format(total_to_trim, n, target))
     print("A total of {0} release directories will be deleted".format(total_to_trim))

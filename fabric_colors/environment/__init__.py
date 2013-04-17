@@ -1,11 +1,12 @@
 import os
 import subprocess
+from functools import wraps
 
 from fabric.api import env
 import fabsettings
 
 
-def _env_get(target):
+def _env_set(target):
     """
     Grab environment variables given the target machine and assign it to fabric's env
     """
@@ -27,7 +28,7 @@ def _env_get(target):
         return
     elif target not in list(env.project_sites.viewkeys()):
         # handle environment that isn't specified
-        print ("Oops. There's no such site. try `fab _env_get:dev` or `fab env_get:prod`")
+        print ("Oops. There's no such site. try `fab _env_set:dev` or `fab env_get:prod`")
         return
 
     # handle environment that was specified
@@ -43,3 +44,27 @@ def _env_get(target):
     env.webserver_type = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('TYPE', 'uwsgi')
     env.webserver_port = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('PORT', '3030')
     env.test = env.project_sites[target].get('TEST', False)
+
+
+def set_target_env(f):
+    """
+    decorator function that dynamically sets the current host's env variables
+    using _env_set(target)
+
+    Usage on a fabric function:
+        @set_target_env
+        def host_type():
+            run('uname -s')
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        for key, value in env.project_sites.iteritems():
+            # key is the identifier, e.g. "dev", "prod", etc etc
+            for k, v in value.iteritems():
+                if v == env.host:
+                    # iterate in the nested dictionary
+                    # if the nested dictionary's name is equivalent to env.host
+                    # we will set our global state env with _env_set(key)
+                    _env_set(key)
+            return f(*args, **kwargs)
+        return wrapper

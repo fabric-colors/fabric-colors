@@ -1,12 +1,12 @@
 import datetime, os, sys
 from fabric.api import env, get, run
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 
 def postgres_backup(target, local_path=None):
     """
     Usage: `fab postgres_backup:dev` `fab postgres_backup:dev,/path/to/backup/folder/`. Backups the target's database to local. Backup path defaults to [cwd]/backups/db/[target]/.
     """
-    _env_get(target)
+    _env_set(target)
     
     target_name = target
     if target == 'localhost':
@@ -67,7 +67,7 @@ def media_backup(target="localhost", local_path=None):
     """
     Usage: `fab media_backup:dev` `fab media_backup:dev,/path/to/backup/folder/`. Backups the target's static files to local. Backup path defaults to [cwd]/backups/static/[target]/.
     """
-    _env_get(target)
+    _env_set(target)
 
     target_name = target
     if target == 'localhost':

@@ -3,7 +3,7 @@ import time
 from fabric.api import run, env
 from fabric.context_managers import prefix, cd, settings as fabconfig
 
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 
 import fabsettings
 
@@ -77,7 +77,7 @@ def uwsgi(target, command, newrelic=False):
     e.g. `fab uwsgi:dev,restart`  possible options - start/stop/restart/restart_violent/status \
     and optional 3rd argument if present, will invoke newrelic call, assuming server has newrelic installed
     """
-    _env_get(target)
+    _env_set(target)
     with prefix(env.activate):
         with cd(env.path_release_current) and fabconfig(warn_only=True):
             if command == "start":

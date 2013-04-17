@@ -1,5 +1,5 @@
 from fabric.api import sudo, run
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 
 
 def _server_check_python_symlink():
@@ -46,24 +46,24 @@ def _server_virtualenvwrapper_arch(username, systemwide=False):
 
 
 def server_postgresql_install(username, target):
-    _env_get(target)
+    _env_set(target)
     sudo('; pacman -S postgresql --noconfirm')
 
 
 def server_postgresql_start(username, target):
-    _env_get(target)
+    _env_set(target)
     if not server_postgresql_status(username, target):
         sudo('rc.d start postgresql')
 
 
 def server_postgresql_stop(username, target):
-    _env_get(target)
+    _env_set(target)
     if server_postgresql_status(username, target):
         sudo('rc.d stop postgresql')
 
 
 def server_postgresql_status(username, target):
-    _env_get(target)
+    _env_set(target)
     print("Checking the status of our postgresql database")
     result = run(';if ps aux | grep -v grep | grep -i "postgres"; \
             then echo 1; else echo ""; fi')

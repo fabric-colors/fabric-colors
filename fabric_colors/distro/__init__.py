@@ -1,5 +1,5 @@
 from fabric.api import env, run, local
-from fabric_colors.deployment import _env_get
+from fabric_colors.deployment import _env_set
 import fabsettings
 import subprocess
 
@@ -9,7 +9,7 @@ def server_adduser(username, target, pubkey=True):
     Create user given the user name & target machine. e.g. `fab server_adduser:web,dev`
     """
     print("This command can only be executed by the root user")
-    _env_get(target)
+    _env_set(target)
     env.user = 'root'
     if not server_chkuser(username, target):
         run('useradd -m {0}'.format(username))
@@ -38,7 +38,7 @@ def server_deluser(username, target):
     Delete user & its home directory given the user name & target machine. e.g. `fab server_deluser:web,dev`
     """
     print("This command can only be executed by the root user")
-    _env_get(target)
+    _env_set(target)
     env.user = 'root'
     run('userdel -r {0}'.format(username))
 
@@ -47,7 +47,7 @@ def server_chkuser(username, target):
     """
     Check if the given user name is available on the given target machine e.g. `fab server_chkuser:web,dev` and returns 1 (True) or Nothing (False)
     """
-    _env_get(target)
+    _env_set(target)
     env.user = 'root'
     result = run(';if id -u "{0}" > /dev/null 2>&1; then \
                         echo 1; \
@@ -58,7 +58,7 @@ def server_chkuser(username, target):
 
 
 def server_distro(username, target):
-    _env_get(target)
+    _env_set(target)
     env.user = username
     result = run('cat /etc/*-release')
     import re
@@ -73,7 +73,7 @@ def server_visudo(target):
     """
     Assign sudo rights to all users in the wheel group on arch linux. e.g. ` fab server_visudo:dev`
     """
-    _env_get(target)
+    _env_set(target)
     env.user = 'root'
     run("""
             if [ -e /etc/sudoers.tmp -o "$(pidof visudo)" ]; then
@@ -99,7 +99,7 @@ def server_python(username, target, distro="arch"):
     """
     Sets up the python environment, given the username, target and distro (defaults to arch). e.g. `fab server_python:web,dev`
     """
-    _env_get(target)
+    _env_set(target)
     if distro == "arch":
         from fabric_colors.distro.arch import _server_python_arch, \
                 _server_virtualenvwrapper_arch
@@ -118,7 +118,7 @@ def server_setup(username, target):
     """
     Runs all scripts as given username, in sudo mode, on the target server. e.g. `fab server_setup:web,dev`
     """
-    _env_get(target)
+    _env_set(target)
     env.user = username
     distro = server_distro(username, target)
     if distro:
@@ -133,7 +133,7 @@ def get_ownership(path, target):
     """
     Given a path, and the target node, return owner and group for that directory
     """
-    _env_get(target)
+    _env_set(target)
     cmd = "ls -ld %s | awk \'{print $3}\'" % path
     cmd2 = "ls -ld %s | awk \'{print $4}\'" % path
     owner = run(cmd)

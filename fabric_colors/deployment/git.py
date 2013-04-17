@@ -4,7 +4,7 @@ import fabsettings
 from fabric.api import env, run, local, sudo
 from fabric.contrib.project import rsync_project
 
-from fabric_colors.environment import _env_get
+from fabric_colors.environment import _env_set
 from fabric_colors.distro import get_ownership
 
 
@@ -39,7 +39,7 @@ def git_archive_and_upload_tar(target):
     local('tar rvf %(release)s.tar `git describe HEAD`-`git config --get user.email`.tag; \
             rm `git describe HEAD`-`git config --get user.email`.tag' % env)
     local('gzip %(release)s.tar' % env)
-    _env_get(target)
+    _env_set(target)
     current_owner, current_group = get_ownership(env.path, target)
     deploying_user = fabsettings.PROJECT_SITES[target].get('USER', 'web')
     deploying_group = fabsettings.PROJECT_SITES[target].get('GROUP', deploying_user)
