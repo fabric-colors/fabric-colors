@@ -1,7 +1,6 @@
 from fabric.api import env, run, local
-from fabric_colors.deployment import _env_set
+from fabric_colors.deploy import _env_set
 import fabsettings
-import subprocess
 
 
 def server_adduser(username, target, pubkey=True):

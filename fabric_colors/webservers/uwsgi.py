@@ -3,7 +3,7 @@ import time
 from fabric.api import run, env
 from fabric.context_managers import prefix, cd, settings as fabconfig
 
-from fabric_colors.deployment import _env_set
+from fabric_colors.environment import _env_set
 
 import fabsettings
 
