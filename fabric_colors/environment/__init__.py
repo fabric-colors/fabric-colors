@@ -40,6 +40,7 @@ def _env_set(target):
         return None
 
     # handle environment that was specified
+    env.target = target
     env.user = fabsettings.PROJECT_SITES[target].get('USER', 'web')
     env.hosts = [env.project_sites[target]['NAME']]
     env.host_string = env.hosts[0]

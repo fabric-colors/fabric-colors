@@ -1,11 +1,13 @@
-__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup', 'git_archive_and_upload_tar']
+__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup']
 
 import re
 import subprocess
 
-from fabric.api import env, run, sudo, require
+from fabric.api import env, run, sudo, require, task
+from fabric.colors import green, cyan, red
+
 from fabric.context_managers import prefix, cd, hide, settings as fabconfig
-from fabric_colors.environment import _env_set
+from fabric_colors.environment import _env_set, set_target_env
 from fabric_colors.deploy.git import git_branch_check, git_archive_and_upload_tar
 from fabric_colors.utilities.django_conventions import django_collectstatic
 from fabric_colors.utilities.emails import email_on_success
@@ -14,37 +16,48 @@ from fabric_colors.utilities import chk_req
 import fabsettings
 
 
-def test_node_check(target):
-    print "Target node %s is designated as a test node." % target
-    print "This means that we can deploy to it from any git branch."
+@task
+@set_target_env
+def test_host_check():
+    """
+    Usage: `fab -R all deploy.test_host_check` or `fab -H mysite.com deploy.test_host_check`
+    """
+    if env.test:
+        print(green("Target host") + cyan(" {0} ".format(env.host)) + green("is designated as a test host."))
+        print("This means that we can deploy to it from any git branch.")
+    else:
+        print(green("Target host") + cyan(" {0} ".format(env.host)) + green("is ") + red("NOT ") + green("designated as a test host."))
+        print("This means that we can only deploy to this node from our master git branch.")
     return env.test
 
 
-def deploy(target, email=False):
+@task(default=True)
+@set_target_env
+def deploy(email=False):
     """
-    Usage: `fab deploy:dev`. Execute a deployment to the given target machine.
+    Usage: `fab -R all deploy` or fab -H mysite.com deploy`. Execute a deployment to the given groups of hosts or host
     """
-    _env_set(target)
     env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
 
     if not chk_req():
         return
 
-    if git_branch_check() or test_node_check(target):
-        git_archive_and_upload_tar(target)
-        pip_install_requirements(target)
-        django_collectstatic(target, deploy=True)
+    if git_branch_check() or test_host_check():
+        git_archive_and_upload_tar()
+        pip_install_requirements()
+        django_collectstatic(deploy=True)
         symlink_current_release()
-        releases_cleanup(target)
-        email_on_success(target, trigger=email)
+        releases_cleanup()
+        email_on_success(trigger=email)
 
 
-def mkvirtualenv(target):
+@task
+@set_target_env
+def mkvirtualenv():
     """
-    Create the virtualenv for our project on the target machine. `fab mkvirtualenv:dev`
+    Usage: `fab -R all mkvirtualenv`. Create the virtualenv for our project on the target machine.
     """
-    _env_set(target)
     run('mkvirtualenv -p python2.7 --distribute %s' % (env.virtualenv))
 
 
@@ -62,11 +75,11 @@ def prepare_deploy_env(target):
         print("{0} already exists".format(env.path_releases))
 
 
-def pip_install_requirements(target):
+@set_target_env
+def pip_install_requirements():
     """
     Install the required python packages from the requirements.txt file using pip
     """
-    _env_set(target)
     require('release', provided_by=[deploy])
     with prefix(env.activate):
         run('&& pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
@@ -98,11 +111,12 @@ def symlink_check():
             return result
 
 
-def releases_list(target, show=True):
+@task
+@set_target_env
+def releases_list(show=True):
     """
-    Returns a list of deploy directories.
+    Usage: `fab -R all releases_list`. Returns a list of deploy directories.
     """
-    _env_set(target)
     with cd(env.path_releases):
         cmd = "ls -tm ."
         result = run(cmd)
@@ -117,37 +131,40 @@ def releases_list(target, show=True):
         result_list[:] = [item for item in result_list if not re.match(fabsettings.PROJECT_NAME, item)]
 
         num = len(result_list)
-        print("Number of release directories on {0} = {1}".format(target, num))
+        print("Number of release directories on {0} = {1}".format(env.target, num))
         if show == True:
             print(result_list)
         return result_list, num
 
 
-def releases_cleanup(target, n=None):
+@task
+@set_target_env
+def releases_cleanup(n=None):
     """
-    Ensure that target node only has `n` most recent deployed directories, where `n` by default is 10 but can be overridden by that node's settings in fabsettings.
+    Usage: `fab -R all releases_cleanup`. Ensure that target node only has `n` most recent deployed directories,
+    where `n` by default is 10 but can be overridden by that node's settings in fabsettings.
     """
     if n:
         # If user provides n, we will override our fabsettings/default attributes and use user-provided value
         n = int(n)
     else:
         # Otherwise, we will use what we have in fabsettings or default to 10
-        n = fabsettings.PROJECT_SITES[target].get('NUM_RELEASES', 10)
+        n = fabsettings.PROJECT_SITES[env.target].get('NUM_RELEASES', 10)
 
     if n <= 2:
         print("'n' must be 2 or more")
         return
 
-    result_list, num = releases_list(target)
+    print(99999, env.target)
+    result_list, num = releases_list(env.target)
     if num <= n:
-        print("Only {0} release directories on {1} at the moment. Which is already less than or equal to what you want to trim to: {2}".format(num, target, n))
+        print("Only {0} release directories on {1} at the moment. Which is already less than or equal to what you want to trim to: {2}".format(num, env.target, n))
         return
 
-    _env_set(target)
     total_to_trim = num - n
-    print("Trimming release directories from {0} to {1} on {2}".format(total_to_trim, n, target))
+    print("Trimming release directories from {0} to {1} on {2}".format(total_to_trim, n, env.target))
     print("A total of {0} release directories will be deleted".format(total_to_trim))
     with cd(env.path_releases):
         cmd = "ls -1tr | grep -v '{0}*' | grep -v 'current' | head -n {1} | xargs -d '\\n' rm -rf".format(fabsettings.PROJECT_NAME, total_to_trim)
         run(cmd)
-    releases_list(target, False)
+    releases_list(False)

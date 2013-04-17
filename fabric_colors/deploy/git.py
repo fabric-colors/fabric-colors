@@ -4,15 +4,18 @@ import fabsettings
 from fabric.api import env, run, local, sudo, task
 from fabric.contrib.project import rsync_project
 
-from fabric_colors.environment import _env_set
+from fabric_colors.environment import set_target_env
 from fabric_colors.distro import get_ownership
 
 
+@task
+@set_target_env
 def git_branch_check():
     """
-    Check that we are on master branch before permitting deploy
+    Usage: `fab -R all deploy.git_branch_check`. Check that we are on master branch before permitting deploy
     """
-    current_branch = str(subprocess.Popen('git branch | grep "*" | sed "s/* //"', \
+    cmd = 'git branch | grep "*" | sed "s/* //"'
+    current_branch = str(subprocess.Popen(cmd, \
             shell=True,\
             stdin=subprocess.PIPE, \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
@@ -20,17 +23,17 @@ def git_branch_check():
     if env.git_branch == "master":
         return True
     else:
-        print("You are currently in the %(git_branch)s branch so `fab deploy:your_target` will not work." % env)
-        print("Please checkout to master branch and merge your features before running `fab deploy:your_target`.")
         return False
 
 
 @task
-def git_archive_and_upload_tar(target):
+@set_target_env
+def git_archive_and_upload_tar():
     """
     Create an archive from the current git branch and upload it to target machine.
     """
-    current_branch = str(subprocess.Popen('git branch | grep "*" | sed "s/* //"', \
+    cmd = 'git branch | grep "*" | sed "s/* //"'
+    current_branch = str(subprocess.Popen(cmd, \
             shell=True,\
             stdin=subprocess.PIPE, \
             stdout=subprocess.PIPE).communicate()[0]).rstrip()
@@ -40,10 +43,9 @@ def git_archive_and_upload_tar(target):
     local('tar rvf %(release)s.tar `git describe HEAD`-`git config --get user.email`.tag; \
             rm `git describe HEAD`-`git config --get user.email`.tag' % env)
     local('gzip %(release)s.tar' % env)
-    _env_set(target)
-    current_owner, current_group = get_ownership(env.path, target)
-    deploying_user = fabsettings.PROJECT_SITES[target].get('USER', 'web')
-    deploying_group = fabsettings.PROJECT_SITES[target].get('GROUP', deploying_user)
+    current_owner, current_group = get_ownership(env.path, env.target)
+    deploying_user = fabsettings.PROJECT_SITES[env.target].get('USER', 'web')
+    deploying_group = fabsettings.PROJECT_SITES[env.target].get('GROUP', deploying_user)
     if current_owner != deploying_user:
         print("Problem Houston. Our root path {0} for deployments is not owned by our deploying user {1}.".format(env.path, deploying_user))
         print("Attempting to set the correct ownership permissions before proceeding.")

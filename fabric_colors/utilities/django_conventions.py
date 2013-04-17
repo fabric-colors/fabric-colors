@@ -3,7 +3,7 @@ import os
 from fabric.api import env, run
 from fabric.context_managers import prefix, cd
 
-from fabric_colors.environment import _env_set
+from fabric_colors.environment import _env_set, set_target_env
 
 
 def django_create_public():
@@ -29,20 +29,19 @@ def django_create_public():
         f.close()
 
 
-def django_collectstatic(target, deploy=False):
+@set_target_env
+def django_collectstatic(deploy=False):
     """
     Usage: `fab django_collectstatic:dev`. Run `python manage.py collectstatic` on specified target.
     """
-    _env_set(target)
     with prefix(env.activate):
         if deploy:
             working_directory = '%(path)s/releases/%(release)s' % env
         else:
             working_directory = env.path_release_current
         with cd(working_directory):
-            #TODO: disable hardcoded target names. Dynamically looking for the correct settings file.
-            if target == "dev" or target == "prod":
-                run("python manage.py collectstatic --noinput --settings=%s.settings.%s" % (env.project_name, target))
+            if env.target:
+                run("python manage.py collectstatic --noinput --settings=%s.settings.%s" % (env.project_name, env.target))
             else:
                 run("python manage.py collectstatic --noinput")
 
