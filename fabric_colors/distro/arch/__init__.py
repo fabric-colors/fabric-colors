@@ -1,5 +1,4 @@
-from fabric.api import sudo, run
-from fabric_colors.deploy import _env_set
+from fabric.api import sudo, env
 
 
 def _server_check_python_symlink():
@@ -11,7 +10,7 @@ def _server_check_python_symlink():
 
 
 def _server_check_virtualenvwrapper(path_bp):
-    result = sudo(';if grep -rn "export WORKON_HOME" {0}/.bash_profile > /dev/null 2>&1; then echo 1; else echo ""; fi'.format(path_bp))
+    result = sudo('if grep -rn "export WORKON_HOME" {0}/.bash_profile > /dev/null 2>&1; then echo 1; else echo ""; fi'.format(path_bp))
     return result.stdout
 
 
@@ -34,37 +33,12 @@ def _server_virtualenvwrapper_arch(username, systemwide=False):
     if systemwide == True:
         path_bp = '/etc/skel'
 
-    sudo('; pip2 install virtualenvwrapper')
+    sudo('pip2 install virtualenvwrapper')
 
     if not _server_check_virtualenvwrapper(path_bp):
         print("virtualenvwrapper hasn't been installed in {0}/.bash_profile yet. Installing...".format(path_bp))
         sudo('echo \'export WORKON_HOME=$HOME/.virtualenvs\' >> {0}/.bash_profile'.format(path_bp))
-        sudo('echo \'export PROJECT_HOME=$HOME/work\' >> {0}/.bash_profile'.format(path_bp))
+        sudo('echo \'export PROJECT_HOME={0}\' >> {1}/.bash_profile'.format(env.path_releases, path_bp))
         sudo('echo \'source `which virtualenvwrapper.sh`\' >> {0}/.bash_profile'.format(path_bp))
     else:
         print("virtualenvwrapper has been installed in {0}/.bash_profile already.".format(path_bp))
-
-
-def server_postgresql_install(username, target):
-    _env_set(target)
-    sudo('; pacman -S postgresql --noconfirm')
-
-
-def server_postgresql_start(username, target):
-    _env_set(target)
-    if not server_postgresql_status(username, target):
-        sudo('rc.d start postgresql')
-
-
-def server_postgresql_stop(username, target):
-    _env_set(target)
-    if server_postgresql_status(username, target):
-        sudo('rc.d stop postgresql')
-
-
-def server_postgresql_status(username, target):
-    _env_set(target)
-    print("Checking the status of our postgresql database")
-    result = run(';if ps aux | grep -v grep | grep -i "postgres"; \
-            then echo 1; else echo ""; fi')
-    print result.stdout

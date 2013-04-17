@@ -1,9 +1,9 @@
 import time
 
-from fabric.api import run, env
+from fabric.api import run, env, task
 from fabric.context_managers import prefix, cd, settings as fabconfig
 
-from fabric_colors.environment import _env_set
+from fabric_colors.environment import set_target_env
 
 import fabsettings
 
@@ -72,23 +72,24 @@ def _uwsgi_restart_violent(target, env, newrelic):
     _uwsgi_start(target, env, newrelic)
 
 
-def uwsgi(target, command, newrelic=False):
+@task(default=True)
+@set_target_env
+def uwsgi(command, newrelic=False):
     """
-    e.g. `fab uwsgi:dev,restart`  possible options - start/stop/restart/restart_violent/status \
-    and optional 3rd argument if present, will invoke newrelic call, assuming server has newrelic installed
+    Usage: `fab -R all uwsgi:command`. command=start/stop/restart/restart_violent/status, newrelic(optional)=True/False.
     """
-    _env_set(target)
+    print(99999, env.user)
     with prefix(env.activate):
         with cd(env.path_release_current) and fabconfig(warn_only=True):
             if command == "start":
                 print("Starting uwsgi processes")
-                _uwsgi_start(target, env, newrelic)
+                _uwsgi_start(env.target, env, newrelic)
             elif command == "stop":
                 print("Stopping uwsgi processes")
                 run("uwsgi --stop /tmp/{0}.pid-{1}".format(env.project_name, env.webserver_port))
             elif command == "restart":
-                _uwsgi_restart(target, env, newrelic)
+                _uwsgi_restart(env.target, env, newrelic)
             elif command == "restart_violent":
-                _uwsgi_restart_violent(target, env, newrelic)
+                _uwsgi_restart_violent(env.target, env, newrelic)
             elif command == "status":
-                _uwsgi_status(target)
+                _uwsgi_status(env.target)
