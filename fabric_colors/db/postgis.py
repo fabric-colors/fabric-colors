@@ -1,10 +1,34 @@
-from fabric.api import run, local
+from fabric.api import task, run, sudo
 
-from fabric_colors.deploy import _env_set
+from fabric_colors.environment import set_target_env
 
 
-def create_postgis_template(target):
-    _env_set(target)
+@task
+@set_target_env
+def install():
+    """
+    Install postgis if it is not yet installed.
+    """
+    if not installed():
+        sudo('pacman -S postgis --noconfirm')
+
+
+@task
+@set_target_env
+def installed():
+    """
+    Check if postgis is installed.
+    """
+    pkg = "pacman -Qs postgis"
+    cmd = """
+        pkg=`{0}`
+        if [ -n "$pkg" ]; then echo 1; else echo ""; fi""".format(pkg)
+    return run(cmd)
+
+
+@task
+@set_target_env
+def create_template():
     command_string = """
         POSTGIS_SQL_PATH=`pg_config --sharedir`/contrib/postgis-2.0
         # Creating the template spatial database.
@@ -20,7 +44,4 @@ def create_postgis_template(target):
         psql -U postgres -d template_postgis -c "GRANT ALL ON geography_columns TO PUBLIC;"
         psql -U postgres -d template_postgis -c "GRANT ALL ON spatial_ref_sys TO PUBLIC;"
     """
-    if target == "localhost":
-        local(command_string)
-    else:
-        run(command_string)
+    run(command_string)
