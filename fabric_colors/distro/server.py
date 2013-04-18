@@ -6,7 +6,7 @@ from fabric_colors.environment import set_target_env
 
 @task
 @set_target_env
-def useradd(username, pubkey=True):
+def useradd(username, group="sudo", pubkey=True):
     """
     Usage: `fab -R all server.useradd:web`. Create user given the user name & target machine.
     """
@@ -15,7 +15,7 @@ def useradd(username, pubkey=True):
     if not userchk(username):
         run('useradd -m {0}'.format(username))
         run('passwd {0}'.format(username))
-        run('gpasswd -a {0} wheel'.format(username))
+        run('gpasswd -a {0} {1}'.format(username, group))
         print("We can now execute commands as this user on your target machine.")
         if pubkey:
             print("Add your public key to {0}@{1}".format(username, env.host))
@@ -73,21 +73,49 @@ def distro():
     Usage: `fab -R all server.distro`. Determine the distro of given target host(s).
     """
     result = run('cat /etc/*-release')
+    env.distro = None
     import re
     result_list = re.findall(r'([^=\s,]+)=([^=\s,]+)', result)
     for item in result_list:
         if item[0] == 'ID':
-            return item[1]
-    return None
+            env.distro = item[1]
+
+    return env.distro
 
 
 @task
 @set_target_env
-def visudo():
+def groups():
     """
-    Usage: `fab -R all server.visudo`. Assign sudo rights to all users in the wheel group on arch linux.
+    Usage: `fab -R dev server.groups`. Returns available groups.
+    """
+    available_groups = run('groups').split()
+    return available_groups
+
+
+@task
+@set_target_env
+def groupadd(group):
+    """
+    Usage: `fab -R dev server.groupadd:sudo`. Adds the given group.
     """
     env.user = 'root'
+    run('groupadd {0}'.format(group))
+
+
+@task
+@set_target_env
+def visudo(sudogroup="sudo"):
+    """
+    Usage: `fab -R all server.visudo:sudogroup`. Enable the given sudo group in /etc/sudoers programmatically.
+
+    This is the same as typing `visudo` and manually commenting out a commented line for the group so it
+    has ALL=(ALL) ALL access rights, i.e. sudo rights.
+    """
+    env.user = 'root'
+    if sudogroup not in groups():
+        groupadd(sudogroup)
+
     run("""
             if [ -e /etc/sudoers.tmp -o "$(pidof visudo)" ]; then
                 echo $(pidof visudo)
@@ -98,29 +126,36 @@ def visudo():
             cp -p /etc/sudoers /etc/sudoers.bak
             cp -p /etc/sudoers /etc/sudoers.tmp
 
-            line="%wheel ALL=(ALL) ALL"
-
-            sed -i "/${line}/ s/# *//" /etc/sudoers.tmp
+            sed -i "/%{0}\s\+ALL=(ALL) ALL/ s/# *//" /etc/sudoers.tmp
 
             mv /etc/sudoers.tmp /etc/sudoers
 
             exit 0
-        """)
+        """.format(sudogroup))
 
 
 @task
 @set_target_env
-def setup(username):
+def setup():
     """
     Usage: `fab -R all server.setup`. Runs all scripts as given username, in sudo mode, on the target server.
     """
-    env.user = username
     current_distro = distro()
     if current_distro:
-        print("Setting up {0}, running on {1}, with {2}".format(env.target, env.distro, env.username))
+        print("Setting up {0}, running on {1}, with {2}".format(env.target, env.distro, env.user))
+        setup_base(current_distro)
         setup_python(current_distro)
-        from fabric_colors.distro.arch import server_postgresql_status
-        server_postgresql_status(username, env.host)
+
+
+@task
+@set_target_env
+def setup_base(distro="arch"):
+    """
+    Usage: `fab -R dev server.setup_base`. Installs the base requirements.
+    """
+    if distro == "arch":
+        from fabric_colors.distro.arch import _server_base
+        _server_base()
 
 
 @task
@@ -139,14 +174,27 @@ def setup_python(distro="arch"):
 
 @task
 @set_target_env
+def chk_exists(path):
+    """
+    Usage: `fab -R dev server.chk_exists:path`. Returns 1 or empty string.
+    """
+    cmd = """if [ -e "{0}" ]; then echo 1; else echo ""; fi""".format(path)
+    return run(cmd)
+
+
+@task
+@set_target_env
 def get_ownership(path):
     """
     Usage: `fab -R all server.get_ownership`. Given a path, and the target node, return owner and group for that directory
     """
-    cmd = "ls -ld %s | awk \'{print $3}\'" % path
-    cmd2 = "ls -ld %s | awk \'{print $4}\'" % path
-    owner = run(cmd)
-    group = run(cmd2)
+    owner = None
+    group = None
+    if chk_exists(path):
+        cmd = "ls -ld %s | awk \'{print $3}\'" % path
+        cmd2 = "ls -ld %s | awk \'{print $4}\'" % path
+        owner = run(cmd)
+        group = run(cmd2)
     return owner, group
 
 
@@ -209,3 +257,22 @@ def sudo_users_and_groups(nopasswd=False):
     """.format(nopasswd_string)).split()
 
     return show_sudo_users_and_groups(ug, nopasswd)
+
+
+@task
+@set_target_env
+def usersudo(user=env.user, sudogroup="sudo"):
+    """
+    Usage: `fab -R dev server.usersudo:user,sudogroup`. Adds deploying user to the given sudo group.
+    """
+    ug_users, ug_groups = sudo_users_and_groups()
+    if not ug_groups:
+        print(magenta("No sudo groups yet, so we will enable the (given) sudo group ") + cyan("{0}".format(sudogroup)) + magenta("."))
+        visudo(sudogroup)
+        ug_users, ug_groups = sudo_users_and_groups()
+
+    if sudogroup in ug_groups:
+        print(green("Adding our user into the sudo group"))
+        run("gpasswd -a {0} {1}".format(user, sudogroup))
+    else:
+        print(red("Something went wrong and we could not add your deploying user to the sudo group {0}.".format(sudogroup)))

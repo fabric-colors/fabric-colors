@@ -5,7 +5,7 @@ from fabric.api import env, run, local, sudo, task
 from fabric.contrib.project import rsync_project
 
 from fabric_colors.environment import set_target_env
-from fabric_colors.distro.server import get_ownership
+from fabric_colors.distro.server import get_ownership, usersudo
 
 
 @task
@@ -43,12 +43,20 @@ def git_archive_and_upload_tar():
     local('tar rvf %(release)s.tar `git describe HEAD`-`git config --get user.email`.tag; \
             rm `git describe HEAD`-`git config --get user.email`.tag' % env)
     local('gzip %(release)s.tar' % env)
+
     current_owner, current_group = get_ownership(env.path)
     deploying_user = fabsettings.PROJECT_SITES[env.target].get('USER', 'web')
     deploying_group = fabsettings.PROJECT_SITES[env.target].get('GROUP', deploying_user)
+
+    if not current_owner or not current_owner:
+        usersudo(deploying_user)  # Add deploying user to the sudo group
+        sudo('mkdir -p %(path)s/releases/%(release)s' % env)
+        sudo('mkdir -p %(path)s/packages/' % env)
+
     if current_owner != deploying_user:
         print("Problem Houston. Our root path {0} for deployments is not owned by our deploying user {1}.".format(env.path, deploying_user))
         print("Attempting to set the correct ownership permissions before proceeding.")
+        usersudo(deploying_user)  # Add deploying user to the sudo group
         sudo("sudo chown -R {0}:{1} {2}".format(deploying_user, deploying_group, env.path))
     run('mkdir -p %(path)s/releases/%(release)s' % env)
     run('mkdir -p %(path)s/packages/' % env)

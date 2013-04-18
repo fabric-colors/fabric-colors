@@ -1,6 +1,13 @@
 from fabric.api import sudo, env
 
 
+def _server_base():
+    sudo("pacman -Syy")
+    sudo("pacman -Syu")
+    sudo("pacman -S base-devel")
+    sudo("pacman -S rsync git-core swig htop")   # TODO: configurable settings for base packages
+
+
 def _server_check_python_symlink():
     """
     Check if python2 symlink to /usr/local/bin/python already exists.

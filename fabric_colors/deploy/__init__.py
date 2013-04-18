@@ -1,6 +1,7 @@
-__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup', 'pip_requirements']
+__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup', 'pip_requirements', 'chkvirtualenv']
 
 import subprocess
+import re
 
 from fabric.api import env, run, sudo, task
 from fabric.colors import green, cyan, red
@@ -9,6 +10,7 @@ from fabric.context_managers import prefix
 from fabric_colors.environment import _env_set, set_target_env
 from fabric_colors.deploy.git import git_branch_check, git_archive_and_upload_tar
 from fabric_colors.deploy.releases import cleanup as _releases_cleanup, symlink_current
+from fabric_colors.webserver import webserver
 from fabric_colors.utilities.django_conventions import django_collectstatic
 from fabric_colors.utilities.emails import email_on_success
 from fabric_colors.utilities import chk_req
@@ -35,15 +37,20 @@ def deploy(email=False):
     """
     Usage: `fab -R all deploy` or fab -H mysite.com deploy`. Execute a deployment to the given groups of hosts or host
     """
-    if not chk_req():
-        return
+    #if not chk_req():
+        #return
 
     if git_branch_check() or test_host_check():
         release()
         git_archive_and_upload_tar()
         pip_requirements()
         django_collectstatic(deploy=True)
+        # TODO:
+        # automatically run migration; once successful,
+        # conclude the deployment with symlink_current()
         symlink_current()
+        webserver()
+        # post-deployment tasks
         _releases_cleanup()
         email_on_success(trigger=email)
 
@@ -60,7 +67,19 @@ def mkvirtualenv():
     """
     Usage: `fab -R all mkvirtualenv`. Create the virtualenv for our project on the target machine.
     """
-    run('mkvirtualenv -p python2.7 --distribute %s' % (env.virtualenv))
+    run('mkvirtualenv --distribute %s' % (env.virtualenv))
+
+
+@task
+@set_target_env
+def chkvirtualenv():
+    """
+    Usage: `fab -R dev chkvirtualenv`. Check that we have the virtualenv for our project on the target machine.
+    """
+    results = run('lsvirtualenv').split()
+    if env.virtualenv in results:
+        return True
+    return False
 
 
 def prepare_deploy_env(target):
@@ -77,6 +96,24 @@ def prepare_deploy_env(target):
         print("{0} already exists".format(env.path_releases))
 
 
+@set_target_env
+def pip_package_preinstall():
+    """
+    Preinstall packages listed in package_exceptions if they are found in requirements.txt!
+    Packages listed in package_exceptions need to have their setup.py executed beforehand.
+    """
+    package_preinstall = []
+    package_exceptions = ['numpy', 'uWSGI']  # Allow user to specify this in fabsettings
+    packages = open('requirements.txt').read().splitlines()
+    for e in package_exceptions:
+        for package in packages:
+            if re.match(e, package):
+                package_preinstall.append(package)
+
+    for p in package_preinstall:
+        run('pip install {0}'.format(p))
+
+
 @task
 @set_target_env
 def pip_requirements():
@@ -86,7 +123,12 @@ def pip_requirements():
     result = None
     if not env.get('release'):
         release()
+
+    if not chkvirtualenv():
+        mkvirtualenv()
+
     with prefix(env.activate):
+        pip_package_preinstall()
         result = run('pip install -r %(path)s/releases/%(release)s/requirements.txt' % env)
 
     if not result:
