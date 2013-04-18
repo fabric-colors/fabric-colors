@@ -1,4 +1,5 @@
 from fabric.api import env, run, local, task
+from fabric.colors import green, red, magenta, cyan
 
 from fabric_colors.environment import set_target_env
 
@@ -147,3 +148,64 @@ def get_ownership(path):
     owner = run(cmd)
     group = run(cmd2)
     return owner, group
+
+
+def show_sudo_users_and_groups(ug, nopasswd):
+    """
+    Helper function that prints out users and groups with sudo (or no passwd sudo) rights.
+    """
+    ug_users = []
+    ug_groups = []
+
+    nopasswd_string = ""
+    if nopasswd:
+        nopasswd_string = "no password "
+
+    if not ug:
+        print(red("There are no users or groups with {0}sudo rights.".format(nopasswd_string)))
+        return ug_users, ug_groups
+
+    for item in ug:
+        if item[0] == "%":
+            ug_groups.append(item[1:])
+        else:
+            ug_users.append(item)
+
+    if ug_users:
+        print(green("Users with {0}sudo rights:".format(nopasswd_string)))
+        print(cyan(ug_users))
+    else:
+        print(red("No users with {0}sudo rights".format(nopasswd_string)))
+
+    if ug_groups:
+        print(green("Groups with {0}sudo rights:".format(nopasswd_string)))
+        print(cyan(ug_groups))
+    else:
+        print(red("No groups with {0}sudo rights".format(nopasswd_string)))
+
+    print("\n")  # just formatting
+    return ug_users, ug_groups
+
+
+@task
+@set_target_env
+def sudo_users_and_groups(nopasswd=False):
+    """
+    Usage: `fab -R dev server.sudo_users_and_groups:nopasswd`. nopasswd(optional)=True/False.
+    """
+    env.user = "root"
+    nopasswd_string = ""
+    nopasswd_string2 = ""
+    if nopasswd:
+        nopasswd_string = "NOPASSWD: "
+        nopasswd_string2 = "no password "
+
+    print(magenta("Retrieving users and groups with {0}sudo rights".format(nopasswd_string2)))
+
+    ug = run("""
+        line="ALL=(ALL) {0}ALL";
+        result=$(grep -v "#" /etc/sudoers | grep '{0}ALL$' | sed "s/$line//g");
+        echo $result;
+    """.format(nopasswd_string)).split()
+
+    return show_sudo_users_and_groups(ug, nopasswd)
