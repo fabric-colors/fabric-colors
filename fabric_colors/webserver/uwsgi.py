@@ -1,8 +1,12 @@
 import time
+import mmap
+import os
+import re
 
-from fabric.api import run, env, task
+from fabric.api import run, env, task, local
 from fabric.colors import green
 from fabric.context_managers import prefix, cd, settings as fabconfig
+from fabric.operations import put
 
 from fabric_colors.environment import set_target_env
 
@@ -98,3 +102,49 @@ def uwsgi(command, newrelic=False):
                 _uwsgi_restart_violent(newrelic)
             elif command == "status":
                 _uwsgi_status()
+
+
+@task
+@set_target_env
+def initializer():
+    """
+    Check if host has the current project's uwsgi initializer. If not, create it.
+    """
+    path_to_initializer = "/usr/lib/systemd/system/"
+    initializer_name = env.project_name + "_" + env.target + ".service"
+    path = path_to_initializer + initializer_name
+    print("Checking if {0} is available".format(initializer_name))
+    cmd = """if [ -e "{0}" ]; then echo 1; else echo ""; fi""".format(path)
+    results = run(cmd)
+    if results:
+        print("{0} is already available in the host.".format(initializer_name))
+        exit()
+
+    template_file = os.path.dirname(__file__) + "/uwsgi.service.template"
+    f = open(template_file)
+    s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+    matches = re.findall(r'{[^{}]*}', s)
+    unique_matches = (list(set(matches)))
+    text = s[:]
+    dic = {}
+    for um in unique_matches:
+        replacement_string = env.get(um[1:][:-1])
+        #print("{0} to be replaced by {1}".format(um, replacement_string))
+        dic[um] = replacement_string
+
+    text = replace_all(text, dic)
+    s.close()
+    f.close()
+    new_file = '{0}_{1}.service'.format(env.project_name, env.target)
+    f_new = open(new_file, 'w+')
+    f_new.write(text)
+    f_new.close()
+    put(new_file, path_to_initializer, use_sudo=True)
+    sudo("systemctl enable {0}".format(new_file))
+    local('rm {0}'.format(new_file))
+
+
+def replace_all(text, dic):
+    for i, j in dic.iteritems():
+        text = text.replace(i, j)
+    return text

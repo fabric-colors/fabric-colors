@@ -276,3 +276,14 @@ def usersudo(user=env.user, sudogroup="sudo"):
         run("gpasswd -a {0} {1}".format(user, sudogroup))
     else:
         print(red("Something went wrong and we could not add your deploying user to the sudo group {0}.".format(sudogroup)))
+
+
+@task
+@set_target_env
+def initializers():
+    """
+    Shows us which are the services that will be initialized automatically after a reboot.
+    """
+    cmd = """ls /etc/systemd/system/*.wants/ | grep -v "/etc/systemd/system" """
+    results = run(cmd).split()
+    return results
