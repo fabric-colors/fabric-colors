@@ -46,7 +46,6 @@ def record_deploy():
         # Send the HTTP Post, with custom header x-api-key
         req = urllib2.Request(url, data)
         req.add_header('x-api-key', env.newrelic['API_KEY'])
-        response = urllib2.urlopen(req)
-        print(response)
+        urllib2.urlopen(req)
     else:
         print(red("We are not deploying newrelic on this host"))
