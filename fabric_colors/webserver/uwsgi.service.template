@@ -1,0 +1,13 @@
+[Unit]
+Description={project_name}_{target}'s uwsgi script
+
+[Service]
+Type=forking
+PIDFile=/tmp/{project_name}_{target}.pid-{webserver_port}
+User={user}
+Group={group}
+WorkingDirectory={path_release_current}
+ExecStart=/bin/bash -c 'source ~/.bash_profile; workon {virtualenv}; {newrelic_program} uwsgi --ini {path_release_current}/{project_name}/uwsgi_{target}.ini'
+
+[Install]
+WantedBy=multi-user.target

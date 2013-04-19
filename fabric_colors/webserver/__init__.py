@@ -13,3 +13,14 @@ def webserver(command='restart', newrelic=False):
     mod = __import__('fabric_colors.webserver.{0}'.format(env.webserver_type), fromlist=['{0}'.format(env.webserver_type)])
     ws = getattr(mod, '{0}'.format(env.webserver_type))
     ws(command, newrelic)
+
+
+@task
+@set_target_env
+def initializer():
+    """
+    Wrapper initializer
+    """
+    mod = __import__('fabric_colors.webserver.{0}'.format(env.webserver_type), fromlist=['{0}'.format(env.webserver_type)])
+    init = getattr(mod, '{0}'.format("initializer"))
+    init()

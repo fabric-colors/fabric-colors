@@ -42,6 +42,7 @@ def _env_set(target):
     # handle environment that was specified
     env.target = target
     env.user = fabsettings.PROJECT_SITES[target].get('USER', 'web')
+    env.group = fabsettings.PROJECT_SITES[target].get('GROUP', env.user)
     env.hosts = [env.project_sites[target]['NAME']]
     env.host_string = env.hosts[0]
     env.path = fabsettings.PROJECT_SITES[target].get('PATH', '/var/www/%s/%s' % (target, env.project_name))
@@ -54,6 +55,10 @@ def _env_set(target):
     env.webserver_port = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('PORT', '3030')
     env.test = env.project_sites[target].get('TEST', False)
     env.newrelic = fabsettings.PROJECT_SITES[target].get('NEW_RELIC', False)
+    env.newrelic_program = ""
+    if env.newrelic:
+        env.newrelic_program = 'NEW_RELIC_CONFIG_FILE={0}/{1} newrelic-admin run-program '.\
+                                format(env.path_releases_current, env.newrelic.get('INI_FILE', 'newrelic.ini'))
     return True
 
 
