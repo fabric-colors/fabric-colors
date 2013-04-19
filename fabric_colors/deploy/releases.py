@@ -1,9 +1,13 @@
 import re
+import subprocess
+from ConfigParser import SafeConfigParser
 
 from fabric.api import task, env, run
 from fabric.context_managers import cd, hide, settings as fabconfig
+from fabric.colors import green
 
 from fabric_colors.environment import set_target_env
+from fabric_colors.monitor.newrelic import record_deploy
 
 import fabsettings
 
@@ -93,3 +97,25 @@ def symlink_check():
         with fabconfig(hide('everything'), warn_only=True):
             result = run(cmd)
             return result
+
+
+def manage_release(description="", disable_newrelic=False):
+    """
+    Helper function to annotate env.release and env.release_notes; and optionally update env.newrelic and register event on newrelic.
+    """
+    env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
+            stdout=subprocess.PIPE).communicate()[0]).rstrip()
+
+    if env.newrelic and not disable_newrelic:
+        print(green("Pinging newrelic to record this deployment event"))
+        parser = SafeConfigParser()
+        parser.read(env.newrelic['INI_FILE'])
+        env.newrelic['VALUES'] = {
+                'deployment[app_name]': parser.get('newrelic', 'app_name'),
+                'deployment[host]': env.host,
+                'deployment[user]': str(subprocess.Popen(["git", "config", "--get", "user.email"], \
+                        stdout=subprocess.PIPE).communicate()[0]).rstrip(),
+                'deployment[revision]': str(subprocess.Popen(["git", "describe", "HEAD"], \
+                        stdout=subprocess.PIPE).communicate()[0]).rstrip(),
+                'deployment[description]': description}
+        record_deploy()
