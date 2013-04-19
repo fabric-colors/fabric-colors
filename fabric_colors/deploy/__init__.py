@@ -1,6 +1,5 @@
-__all__ = ['deploy', 'mkvirtualenv', 'releases_list', 'releases_cleanup', 'pip_requirements', 'chkvirtualenv']
+__all__ = ['deploy', 'pip_requirements']
 
-import subprocess
 import re
 
 from fabric.api import env, run, sudo, task
@@ -9,8 +8,9 @@ from fabric.colors import green, cyan, red
 from fabric.context_managers import prefix
 from fabric_colors.environment import _env_set, set_target_env
 from fabric_colors.deploy.git import git_branch_check, git_archive_and_upload_tar
-from fabric_colors.deploy.releases import cleanup as _releases_cleanup, symlink_current
+from fabric_colors.deploy.releases import cleanup as _releases_cleanup, symlink_current, manage_release
 from fabric_colors.webserver import webserver
+from fabric_colors.virtualenv import chkvirtualenv, mkvirtualenv
 from fabric_colors.utilities.django_conventions import django_collectstatic
 from fabric_colors.utilities.emails import email_on_success
 from fabric_colors.utilities import chk_req
@@ -41,7 +41,7 @@ def deploy(email=False):
         return
 
     if git_branch_check() or test_host_check():
-        release()
+        manage_release('Deployment start')
         git_archive_and_upload_tar()
         pip_requirements()
         django_collectstatic(deploy=True)
@@ -51,35 +51,9 @@ def deploy(email=False):
         symlink_current()
         webserver()
         # post-deployment tasks
+        manage_release('Deployment start')
         _releases_cleanup()
         email_on_success(trigger=email)
-
-
-def release():
-    env.release = str(subprocess.Popen(["git", "rev-parse", "--short", "HEAD"], \
-            stdout=subprocess.PIPE).communicate()[0]).rstrip()
-    print(env.release)
-
-
-@task
-@set_target_env
-def mkvirtualenv():
-    """
-    Usage: `fab -R all mkvirtualenv`. Create the virtualenv for our project on the target machine.
-    """
-    run('mkvirtualenv --distribute %s' % (env.virtualenv))
-
-
-@task
-@set_target_env
-def chkvirtualenv():
-    """
-    Usage: `fab -R dev chkvirtualenv`. Check that we have the virtualenv for our project on the target machine.
-    """
-    results = run('lsvirtualenv').split()
-    if env.virtualenv in results:
-        return True
-    return False
 
 
 def prepare_deploy_env(target):
@@ -122,7 +96,7 @@ def pip_requirements():
     """
     result = None
     if not env.get('release'):
-        release()
+        manage_release(disable_newrelic=True)
 
     if not chkvirtualenv():
         mkvirtualenv()

@@ -1,11 +1,10 @@
 import time
 
 from fabric.api import run, env, task
+from fabric.colors import green
 from fabric.context_managers import prefix, cd, settings as fabconfig
 
 from fabric_colors.environment import set_target_env
-
-import fabsettings
 
 
 @set_target_env
@@ -46,14 +45,14 @@ def _uwsgi_start(newrelic=False):
     else:
         # Otherwise, we will check for its presence in fabsettings, failing
         # which we will finally default to False
-        newrelic = fabsettings.PROJECT_SITES[env.target].get('NEW_RELIC', False)
+        newrelic = env.newrelic
 
     result = _uwsgi_chk_log()
     if not result:
         _uwsgi_mk_log()
 
     if newrelic:
-        print("Starting uwsgi with NEW_RELIC_CONFIG_FILE")
+        print(green("Starting uwsgi with NEW_RELIC_CONFIG_FILE"))
         run("NEW_RELIC_CONFIG_FILE={0}/newrelic.ini \
                 newrelic-admin run-program uwsgi --ini {1}/uwsgi_{2}.ini".format(env.path_release_current, env.project_path, env.target))
     else:

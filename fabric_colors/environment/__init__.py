@@ -53,6 +53,7 @@ def _env_set(target):
     env.webserver_type = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('TYPE', 'uwsgi')
     env.webserver_port = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('PORT', '3030')
     env.test = env.project_sites[target].get('TEST', False)
+    env.newrelic = fabsettings.PROJECT_SITES[target].get('NEW_RELIC', False)
     return True
 
 
