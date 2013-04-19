@@ -37,8 +37,8 @@ def deploy(email=False):
     """
     Usage: `fab -R all deploy` or fab -H mysite.com deploy`. Execute a deployment to the given groups of hosts or host
     """
-    #if not chk_req():
-        #return
+    if not chk_req():
+        return
 
     if git_branch_check() or test_host_check():
         release()
