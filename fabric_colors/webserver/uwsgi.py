@@ -3,7 +3,7 @@ import mmap
 import os
 import re
 
-from fabric.api import run, env, task, local
+from fabric.api import run, env, task, local, sudo
 from fabric.colors import green
 from fabric.context_managers import prefix, cd, settings as fabconfig
 from fabric.operations import put
