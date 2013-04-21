@@ -8,6 +8,9 @@ from fabric_colors.environment import set_target_env
 @task
 @set_target_env
 def install():
+    """
+    Distro-agnostic way of installing postgis2.
+    """
     mod = __import__('fabric_colors.distro.{0}.postgis'.format(env.distro), fromlist=['{0}.postgis'.format(env.distro)])
     PKG_INSTALL = getattr(mod, 'PKG_INSTALL')
 
@@ -19,7 +22,7 @@ def install():
 @set_target_env
 def installed():
     """
-    Check if postgis2 is installed by macports.
+    Distro-agnostic way of checking if postgis2 is installed.
     """
     mod = __import__('fabric_colors.distro.{0}.postgis'.format(env.distro), fromlist=['{0}.postgis'.format(env.distro)])
     cmd = getattr(mod, 'PKG_INSTALLED_CMD')
