@@ -1,4 +1,6 @@
-from fabric.api import task, run, sudo
+from fabric.api import task, run, env
+from fabric.operations import local
+from fabric.colors import red
 
 from fabric_colors.environment import set_target_env
 
@@ -6,24 +8,31 @@ from fabric_colors.environment import set_target_env
 @task
 @set_target_env
 def install():
-    """
-    Install postgis if it is not yet installed.
-    """
+    mod = __import__('fabric_colors.distro.{0}.postgis'.format(env.distro), fromlist=['{0}.postgis'.format(env.distro)])
+    PKG_INSTALL = getattr(mod, 'PKG_INSTALL')
+
     if not installed():
-        sudo('pacman -S postgis --noconfirm')
+        env.run(PKG_INSTALL)
 
 
 @task
 @set_target_env
 def installed():
     """
-    Check if postgis is installed.
+    Check if postgis2 is installed by macports.
     """
-    pkg = "pacman -Qs postgis"
-    cmd = """
-        pkg=`{0}`
-        if [ -n "$pkg" ]; then echo 1; else echo ""; fi""".format(pkg)
-    return run(cmd)
+    mod = __import__('fabric_colors.distro.{0}.postgis'.format(env.distro), fromlist=['{0}.postgis'.format(env.distro)])
+    cmd = getattr(mod, 'PKG_INSTALLED_CMD')
+
+    if env.run == local:
+        result = local(cmd, capture=True)
+    else:
+        result = env.run(cmd)
+
+    if result:
+        print(red("Already installed."))
+
+    return result
 
 
 @task

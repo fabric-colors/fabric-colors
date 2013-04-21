@@ -68,23 +68,6 @@ def userchk(username):
 
 @task
 @set_target_env
-def distro():
-    """
-    Usage: `fab -R all server.distro`. Determine the distro of given target host(s).
-    """
-    result = run('cat /etc/*-release')
-    env.distro = None
-    import re
-    result_list = re.findall(r'([^=\s,]+)=([^=\s,]+)', result)
-    for item in result_list:
-        if item[0] == 'ID':
-            env.distro = item[1]
-
-    return env.distro
-
-
-@task
-@set_target_env
 def groups():
     """
     Usage: `fab -R dev server.groups`. Returns available groups.
@@ -140,6 +123,7 @@ def setup():
     """
     Usage: `fab -R all server.setup`. Runs all scripts as given username, in sudo mode, on the target server.
     """
+    from fabric_colors.distro import distro
     current_distro = distro()
     if current_distro:
         print("Setting up {0}, running on {1}, with {2}".format(env.target, env.distro, env.user))
