@@ -45,7 +45,6 @@ def _server_virtualenvwrapper_arch(username, systemwide=False):
     if not _server_check_virtualenvwrapper(path_bp):
         print("virtualenvwrapper hasn't been installed in {0}/.bash_profile yet. Installing...".format(path_bp))
         sudo('echo \'export WORKON_HOME=$HOME/.virtualenvs\' >> {0}/.bash_profile'.format(path_bp))
-        sudo('echo \'export PROJECT_HOME={0}\' >> {1}/.bash_profile'.format(env.path_releases, path_bp))
         sudo('echo \'source `which virtualenvwrapper.sh`\' >> {0}/.bash_profile'.format(path_bp))
     else:
         print("virtualenvwrapper has been installed in {0}/.bash_profile already.".format(path_bp))
