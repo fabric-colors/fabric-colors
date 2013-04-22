@@ -30,7 +30,8 @@ def _uwsgi_mk_log():
 @set_target_env
 def _uwsgi_status():
     print("Checking the status of our uswgi processes")
-    result = run("if ps aux | grep -v grep | grep -i 'uwsgi'; then echo 'OK'; else echo 'NO'; fi")
+    result = run("if ps aux | grep -v grep | grep -i 'uwsgi' | grep '{0}'; then echo 'OK'; else echo 'NO'; fi"\
+            .format(env.project_name))
     if result.stdout != "NO":
         print("uwsgi is running!")
         return True
@@ -51,8 +52,7 @@ def _uwsgi_start(newrelic=False):
         # which we will finally default to False
         newrelic = env.newrelic
 
-    result = _uwsgi_chk_log()
-    if not result:
+    if not _uwsgi_chk_log():
         _uwsgi_mk_log()
 
     if newrelic:
