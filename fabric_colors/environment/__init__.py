@@ -31,6 +31,8 @@ def _env_set(target):
         env.user = env.local_user
         env.project_home = os.getenv("PROJECT_HOME")
         env.project_path = '%(project_home)s/%(project_name)s' % env
+        env.virtualenv = fabsettings.PROJECT_SITES.get('localhost', {}).get('VIRTUALENV', env.project_name)
+        env.activate = 'source ~/.bash_profile; source `which virtualenvwrapper.sh`; workon {0}'.format(env.virtualenv)
         return True
     elif target not in list(env.project_sites.viewkeys()):
         # handle environment that isn't specified
@@ -55,7 +57,6 @@ def _env_set(target):
     env.path_release_current = fabsettings.PROJECT_SITES[target].get('PATH_RELEASE_CURRENT', '/var/www/%s/%s/releases/current' % (target, env.project_name))
     env.project_path = '%(path_release_current)s/%(project_name)s' % env  # slash prepended
     env.virtualenv = fabsettings.PROJECT_SITES[target].get('VIRTUALENV', env.project_name)
-    env.activate = 'source ~/.bash_profile; source `which virtualenvwrapper.sh`; workon {0}'.format(env.virtualenv)
     env.webserver_type = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('TYPE', 'uwsgi')
     env.webserver_port = fabsettings.PROJECT_SITES[target].get('WEBSERVER', {}).get('PORT', '3030')
     env.test = env.project_sites[target].get('TEST', False)
