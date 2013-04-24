@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from fabric.api import task, env
 from fabric.operations import local
@@ -189,3 +190,152 @@ def restart():
     mod = __import__('fabric_colors.distro.{0}.postgresql'.format(env.distro), fromlist=['{0}.postgresql'.format(env.distro)])
     RESTART = getattr(mod, 'RESTART')
     env.run(RESTART)
+
+
+#TODO
+@set_target_env
+def pg_hba_conf():
+    """
+    Set our pg_hba.conf to our preferred defaults.
+    """
+
+    #run("""
+        #line="ALL=(ALL) {0}ALL";
+        #result=$(grep -v "#" /etc/sudoers | grep '{0}ALL$' | sed "s/$line//g");
+        #echo $result;
+    pass
+
+
+#TODO
+@set_target_env
+def postgresql_conf():
+    """
+    In postgresq.conf, toggle listen to * or specific IP or commented out
+    """
+    pass
+
+
+@task
+@set_target_env
+def chk_db(project_type='django'):
+    """
+    Checks if such a database exist.
+    """
+    if project_type == 'django':
+        if env.target != "localhost":
+            mod = __import__('{0}.settings'.format(env.project_name),\
+                    fromlist=['{0}'.format(env.target)])
+            settings = getattr(mod, '{0}'.format(env.target))
+        else:
+            from django.conf import settings
+
+        databases = settings.DATABASES
+        for key, value in databases.iteritems():
+            print(green("Checking '{0}' database defined in {1}"\
+                    .format(key, settings)))
+            from pprint import pprint
+            pprint(value)
+
+            host = value.get('HOST')
+            if host == "":
+                host = "localhost"
+
+            port = value.get('PORT')
+            if port == "":
+                port = "5432"
+
+            name = value.get('NAME')
+            user = value.get('USER')
+            password = value.get('PASSWORD')
+
+            cmd = "PGPASSWORD={0} psql -h {1} -U {2} -d {3} -p {4}".format(password, host, user, name, port)
+
+            if env.run == local:
+                result = env.run(cmd)
+            else:
+                result = env.run(cmd, warn_only=True)
+
+            if result.return_code == 0:
+                print(green("Our database exists and is configured correctly."))
+                return True
+            else:
+                print(red("Our database do not exist so we shall proceed to create it."))
+                return False
+
+
+@task
+@set_target_env
+def create_db(project_type='django'):
+    if project_type == 'django':
+        if env.target != "localhost":
+            mod = __import__('{0}.settings'.format(env.project_name),\
+                    fromlist=['{0}'.format(env.target)])
+            settings = getattr(mod, '{0}'.format(env.target))
+        else:
+            from django.conf import settings
+
+        databases = settings.DATABASES
+        for key, value in databases.iteritems():
+            print(green("Checking '{0}' database defined in {1}"\
+                    .format(key, settings)))
+            from pprint import pprint
+            pprint(value)
+
+            host = value.get('HOST')
+            if host == "":
+                host = "localhost"
+
+            port = value.get('PORT')
+            if port == "":
+                port = "5432"
+
+            name = value.get('NAME')
+            user = value.get('USER')
+            password = value.get('PASSWORD')
+
+            cmd = "PGPASSWORD={0} createuser -srdl {1} -P -p {2} -U postgres -h {3}".format(password, user, port, host)
+
+            if env.run == local:
+                p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                p.wait()
+                return_code = p.returncode
+            else:
+                result = env.run(cmd, warn_only=True)
+                return_code = result.return_code
+
+            if return_code == 0:
+                print(green("User created."))
+                user_created = True
+            else:
+                print(red("User not created. Either user already exists or we cannot connect to our host."))
+                user_created = False
+
+            cmd2 = "PGPASSWORD={0} createdb -E utf8 -O {1} {2} -p {3} -U postgres -h {4}".format(password, user, name, port, host)
+
+            if env.run == local:
+                p2 = subprocess.Popen(cmd2, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                p2.wait()
+                return_code2 = p2.returncode
+            else:
+                result = env.run(cmd2, warn_only=True)
+                return_code2 = result.return_code
+
+            if return_code2 == 0:
+                print(green("Database created."))
+                db_created = True
+            else:
+                print(red("Database not created. Either db already exists or we cannot connect to our host."))
+                db_created = False
+
+            return user_created, db_created
+
+
+#TODO
+@set_target_env
+def enable_postgis():
+    #postgres=# \connect [name] [user]
+    #You are now connected to database "[name]" as user "[user]".
+    #thack2012_db=# CREATE EXTENSION postgis;
+    #CREATE EXTENSION
+    #thack2012_db=# CREATE EXTENSION postgis_topology;
+    pass
