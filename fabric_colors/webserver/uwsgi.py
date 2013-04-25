@@ -30,8 +30,8 @@ def _uwsgi_mk_log():
 @set_target_env
 def _uwsgi_status():
     print("Checking the status of our uswgi processes")
-    result = run("if ps aux | grep -v grep | grep -i 'uwsgi' | grep '{0}'; then echo 'OK'; else echo 'NO'; fi"\
-            .format(env.project_name))
+    result = run("if ps aux | grep -v grep | grep -i 'uwsgi' | grep '{0}' | grep 'uwsgi_{1}'; then echo 'OK'; else echo 'NO'; fi"\
+            .format(env.project_name, env.target))
     if result.stdout != "NO":
         print("uwsgi is running!")
         return True
