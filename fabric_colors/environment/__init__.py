@@ -28,6 +28,7 @@ def _env_set(target):
     elif target == 'localhost':
         # all environment variables relating to a developer's localhost
         env.run = local
+        env.target = 'local'  # By convention, we set our settings for localhost to be local.py
         env.user = env.local_user
         env.project_home = os.getenv("PROJECT_HOME")
         env.project_path = '%(project_home)s/%(project_name)s' % env
