@@ -66,7 +66,7 @@ def _env_set(target):
     env.newrelic_program = ""
     if env.newrelic:
         env.newrelic_program = 'NEW_RELIC_CONFIG_FILE={0}/{1} newrelic-admin run-program '.\
-                                format(env.path_releases_current, env.newrelic.get('INI_FILE', 'newrelic.ini'))
+                                format(env.path_release_current, env.newrelic.get('INI_FILE', 'newrelic.ini'))
 
     return True
 

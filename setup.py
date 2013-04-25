@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='Fabric Colors',
-    version='0.9.40',
+    version='0.9.40a',
     packages=['fabric_colors', ],
     license='LICENSE',
     description='Reusable fabric functions',
