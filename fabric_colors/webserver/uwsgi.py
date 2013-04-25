@@ -57,11 +57,17 @@ def _uwsgi_start(newrelic=False):
 
     if newrelic:
         print(green("Starting uwsgi with NEW_RELIC_CONFIG_FILE"))
-        run("NEW_RELIC_CONFIG_FILE={0}/newrelic.ini \
-                newrelic-admin run-program uwsgi --ini {1}/uwsgi_{2}.ini".format(env.path_release_current, env.project_path, env.target))
+        run("""
+            export PROJECT_HOME={0};
+            NEW_RELIC_CONFIG_FILE={1}/newrelic.ini \
+                newrelic-admin run-program uwsgi --ini {2}/uwsgi_{3}.ini"""\
+                .format(env.path_releases, env.path_release_current, env.project_path, env.target))
     else:
         print("Starting uwsgi")
-        run("uwsgi --ini {0}/uwsgi_{1}.ini".format(env.project_path, env.target))
+        run("""
+            export PROJECT_HOME={0};
+            uwsgi --ini {1}/uwsgi_{2}.ini"""\
+                    .format(env.path_releases, env.project_path, env.target))
 
 
 @set_target_env
