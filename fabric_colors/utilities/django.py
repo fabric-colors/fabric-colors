@@ -1,8 +1,7 @@
 import os
 
-from fabric.api import env, run
+from fabric.api import env, run, task
 from fabric.context_managers import prefix, cd
-
 from fabric_colors.environment import _env_set, set_target_env
 
 
@@ -51,12 +50,11 @@ def collectstatic(deploy=False):
 
 @task
 @set_target_env
-def makemessages(target, language):
+def makemessages(language):
     """
     Usage: `fab django_makemessages:dev,de`. Run `python manage.py makemessages` on specified target and
     language
     """
-    _env_set(target)
     with prefix(env.activate):
         with cd(env.path_release_current):
             if target == "dev" or target == "prod":
@@ -67,11 +65,10 @@ def makemessages(target, language):
 
 @task
 @set_target_env
-def compilemessages(target):
+def compilemessages():
     """
     Usage: `fab django_compilemessages:dev`. Run `python manage.py compilemessages` on specified target.
     """
-    _env_set(target)
     with prefix(env.activate):
         with cd(env.path_release_current):
             if target == "dev" or target == "prod":
