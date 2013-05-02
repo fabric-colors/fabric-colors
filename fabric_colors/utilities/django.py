@@ -57,7 +57,7 @@ def makemessages(language):
     """
     with prefix(env.activate):
         with cd(env.path_release_current):
-            if target == "dev" or target == "prod":
+            if env.target:
                 run("python manage.py makemessages -l %s --settings=%s.settings.%s" % (language, env.project_name, target))
             else:
                 run("python manage.py makemessages -l %s" % language)
@@ -71,10 +71,7 @@ def compilemessages():
     """
     with prefix(env.activate):
         with cd(env.path_release_current):
-            if target == "dev" or target == "prod":
+            if env.target:
                 run("python manage.py compilemessages --settings=%s.settings.%s" % (env.project_name, target))
             else:
                 run("python manage.py compilemessages")
-
-
-
