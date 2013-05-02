@@ -6,7 +6,8 @@ from fabric.context_managers import prefix, cd
 from fabric_colors.environment import _env_set, set_target_env
 
 
-def django_create_public():
+@task
+def create_public():
     """
     Usage: `fab django_create_public`. Create public directory for django media and static files in our localhost.
     """
@@ -30,7 +31,7 @@ def django_create_public():
 
 
 @set_target_env
-def django_collectstatic(deploy=False):
+def collectstatic(deploy=False):
     """
     Usage: `fab django_collectstatic:dev`. Run `python manage.py collectstatic` on specified target.
     """
@@ -46,7 +47,8 @@ def django_collectstatic(deploy=False):
                 run("python manage.py collectstatic --noinput")
 
 
-def django_makemessages(target, language):
+@task
+def makemessages(target, language):
     """
     Usage: `fab django_makemessages:dev,de`. Run `python manage.py makemessages` on specified target and
     language
@@ -60,7 +62,8 @@ def django_makemessages(target, language):
                 run("python manage.py makemessages -l %s" % language)
 
 
-def django_compilemessages(target):
+@task
+def compilemessages(target):
     """
     Usage: `fab django_compilemessages:dev`. Run `python manage.py compilemessages` on specified target.
     """
