@@ -7,6 +7,7 @@ from fabric_colors.environment import _env_set, set_target_env
 
 
 @task
+@set_target_env
 def create_public():
     """
     Usage: `fab django_create_public`. Create public directory for django media and static files in our localhost.
@@ -30,6 +31,7 @@ def create_public():
         f.close()
 
 
+@task
 @set_target_env
 def collectstatic(deploy=False):
     """
@@ -48,6 +50,7 @@ def collectstatic(deploy=False):
 
 
 @task
+@set_target_env
 def makemessages(target, language):
     """
     Usage: `fab django_makemessages:dev,de`. Run `python manage.py makemessages` on specified target and
@@ -63,6 +66,7 @@ def makemessages(target, language):
 
 
 @task
+@set_target_env
 def compilemessages(target):
     """
     Usage: `fab django_compilemessages:dev`. Run `python manage.py compilemessages` on specified target.
