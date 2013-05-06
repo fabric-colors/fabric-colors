@@ -2,6 +2,45 @@ import datetime
 import os
 from fabric.api import env, get, run
 from fabric_colors.deploy import _env_set
+from fabric_colors.environment import set_target_env
+import sys
+import os.path
+import os
+import logging
+from datetime import datetime
+
+
+@task
+@set_target_env
+def mysql_db(dump_path='/backups/db/', local_path=None):
+    """
+    Usage: `fab -R <server_name> backups.mysql_db /path/to/backup/folder/`
+    Backups the target's database to local destination.
+    Backup path defaults to /backups/db/[target]/.
+    1. Creates the target folder if doesnt exists
+    2. By default keeps 30 days of backups
+    """
+    print 123
+
+
+def _backup_name():
+    now = datetime.now()
+    day_name = now.strftime("%A")
+    file_name = "%s.sql" % day_name.lower()
+    logging.debug("Setting backup name for day name %s as %s" % (day_name, file_name))
+    return file_name
+
+
+def _run_backup(file_name):
+    cmd = "%(mysqldump)s -u %(user)s --password=%(password)s %(database)s > %(log_dir)s/%(file)s" % {
+        'mysqldump' : MYSQL_CMD,
+        'user' : DATABASE_USER,
+        'password' : DATABASE_PASSWORD,
+        'database' : DATABASE_NAME,
+        'log_dir' : BACKUP_DIR,
+        'file': file_name}
+    logging.debug("Backing up with command %s " % cmd)
+    return os.system(cmd)
 
 
 def postgres_backup(target, local_path=None):

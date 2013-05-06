@@ -1,5 +1,3 @@
-__all__ = ['deploy', 'pip_requirements']
-
 import re
 
 from fabric.api import env, run, sudo, task
@@ -11,7 +9,7 @@ from fabric_colors.deploy.git import git_branch_check, git_archive_and_upload_ta
 from fabric_colors.deploy.releases import cleanup as _releases_cleanup, symlink_current, manage_release
 from fabric_colors.webserver import webserver
 from fabric_colors.virtualenv import chkvirtualenv, mkvirtualenv
-from fabric_colors.utilities.django_conventions import django_collectstatic
+from fabric_colors.utilities.django import collectstatic
 from fabric_colors.utilities.emails import email_on_success
 from fabric_colors.utilities import chk_req
 
@@ -44,7 +42,7 @@ def deploy(email=False):
         manage_release('Deployment start')
         git_archive_and_upload_tar()
         pip_requirements()
-        django_collectstatic(deploy=True)
+        collectstatic(deploy=True)
         # TODO:
         # automatically run migration; once successful,
         # conclude the deployment with symlink_current()

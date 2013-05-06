@@ -9,7 +9,7 @@ from fabric_colors.environment import _env_set, set_target_env
 @set_target_env
 def create_public():
     """
-    Usage: `fab django_create_public`. Create public directory for django media and static files in our localhost.
+    Usage: `fab -R dev django.create_public`. Create public directory for django media and static files in our localhost.
     """
     _env_set(target="localhost")
     public_dir = os.path.join(env.project_path,
@@ -34,7 +34,7 @@ def create_public():
 @set_target_env
 def collectstatic(deploy=False):
     """
-    Usage: `fab django_collectstatic:dev`. Run `python manage.py collectstatic` on specified target.
+    Usage: `fab -R dev django.collectstatic`. Run `python manage.py collectstatic` on specified target.
     """
     with prefix(env.activate):
         if deploy:
@@ -52,7 +52,7 @@ def collectstatic(deploy=False):
 @set_target_env
 def makemessages(language):
     """
-    Usage: `fab django_makemessages:dev,de`. Run `python manage.py makemessages` on specified target and
+    Usage: `fab -R dev django.makemessages:de`. Run `python manage.py makemessages` on specified target and
     language
     """
     with prefix(env.activate):
@@ -67,7 +67,7 @@ def makemessages(language):
 @set_target_env
 def compilemessages():
     """
-    Usage: `fab django_compilemessages:dev`. Run `python manage.py compilemessages` on specified target.
+    Usage: `fab -R dev django.compilemessages`. Run `python manage.py compilemessages` on specified target.
     """
     with prefix(env.activate):
         with cd(env.path_release_current):
