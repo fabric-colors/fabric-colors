@@ -6,6 +6,7 @@ from fabric.api import env, run
 from fabric.context_managers import hide
 from fabric.operations import local
 from fabric.colors import green, red
+from fabric.context_managers import prefix
 
 import fabsettings
 
@@ -117,6 +118,15 @@ def set_target_env(f):
                     # if the nested dictionary's name is equivalent to env.host
                     # we will set our global state env with _env_set(key)
                     _env_set(key)
+
+                    with prefix(env.activate):
+                        from fabric.contrib import django
+                        if env.host == "localhost":
+                            _settings = '.'.join([env.project_name, 'settings'])
+                        else:
+                            _settings = '.'.join([env.project_name, 'settings', env.target])
+                        django.settings_module(_settings)
+
 
         if not env.get('distro'):
             _env_set_distro()

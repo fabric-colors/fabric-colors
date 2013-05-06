@@ -1,47 +1,65 @@
 import datetime
 import os
-from fabric.api import env, get, run
+from fabric.api import env, get, run, task
 from fabric_colors.deploy import _env_set
 from fabric_colors.environment import set_target_env
-import sys
-import os.path
-import os
-import logging
-from datetime import datetime
+from fabric.context_managers import prefix
+from fabric.contrib import django
+
 
 
 @task
 @set_target_env
-def mysql_db(dump_path='/backups/db/', local_path=None):
+def mysql_db(local_path='/backups/db/'):
     """
-    Usage: `fab -R <server_name> backups.mysql_db /path/to/backup/folder/`
-    Backups the target's database to local destination.
-    Backup path defaults to /backups/db/[target]/.
-    1. Creates the target folder if doesnt exists
-    2. By default keeps 30 days of backups
+    usage: `fab -r <server_name> backups.mysql_db /path/to/backup/folder/`
+    backups the target's database to local destination.
+    backup path defaults to /backups/db/[target]/.
+    1. creates the target folder if doesnt exists
+    2. by default keeps 30 days of backups
     """
-    print 123
+
+    with prefix(env.activate):
+        if env.host == "localhost":
+            _settings = '.'.join([env.project_name, 'settings'])
+        else:
+            _settings = '.'.join([env.project_name, 'settings', env.target])
+        print 1231231, _settings
+        django.settings_module(_settings)
+        from django.conf import settings
+        print 123123123
+        print settings
 
 
-def _backup_name():
-    now = datetime.now()
-    day_name = now.strftime("%A")
-    file_name = "%s.sql" % day_name.lower()
-    logging.debug("Setting backup name for day name %s as %s" % (day_name, file_name))
-    return file_name
+    print settings
 
+    timestamp = datetime.datetime.now().strftime("%y-%m-%d_%h-%m-%s")
+    fname = '%(dump_path)s%(database)s-backup-%(date)s.xml.gz' % {
+        'dump_path': local_path,
+        'database': settings.databases['default']['name'],
+        'date': timestamp,
+    }
 
-def _run_backup(file_name):
-    cmd = "%(mysqldump)s -u %(user)s --password=%(password)s %(database)s > %(log_dir)s/%(file)s" % {
-        'mysqldump' : MYSQL_CMD,
-        'user' : DATABASE_USER,
-        'password' : DATABASE_PASSWORD,
-        'database' : DATABASE_NAME,
-        'log_dir' : BACKUP_DIR,
-        'file': file_name}
-    logging.debug("Backing up with command %s " % cmd)
-    return os.system(cmd)
+    if not os.path.exists(local_path):
+        os.makedirs(local_path)
 
+    if exists(fname):
+        run('rm "%s"' % fname)
+
+    print("dumping %s to %s" % (settings.databases['default']['name'], fname))
+    run('mysqldump -u %(username)s -p%(password)s %(database)s --xml | '
+        'gzip > %(fname)s' % {'username': settings.databases['default']['user'],
+                              'password': settings.databases['default']['password'],
+                              'database': settings.databases['defaukt']['name'],
+                              'fname': fname})
+
+    print("transferring...")
+    get(fname, local_path)
+
+    print("removing remote dump file...")
+    run("rm %(dump_file)s" % {'dump_file': fname})
+
+    print("finish")
 
 def postgres_backup(target, local_path=None):
     """
