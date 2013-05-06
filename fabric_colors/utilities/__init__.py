@@ -5,7 +5,7 @@ from fabric.api import env, task
 from fabric.colors import green, cyan, red
 
 from fabric_colors.deploy import _env_set
-from fabric_colors.utilities.conventions import (collectstatic,
+from fabric_colors.utilities.django import (collectstatic,
         create_public, compilemessages, makemessages)
 from fabric_colors.utilities.backups import (postgres_backup, media_backup)
 from fabric_colors.environment import set_target_env
