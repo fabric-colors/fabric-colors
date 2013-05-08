@@ -3,7 +3,7 @@ from fabric.api import task, env
 from fabric_colors.environment import set_target_env
 
 
-@task(default=True)
+@task
 @set_target_env
 def webserver(command='restart', newrelic=False):
     """
