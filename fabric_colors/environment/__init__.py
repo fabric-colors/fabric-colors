@@ -8,7 +8,10 @@ from fabric.operations import local
 from fabric.colors import green, red
 from fabric.context_managers import prefix
 
-import fabsettings
+try:
+    import fabsettings
+except:
+    print("Please set up your fabsettings.py")
 
 
 def _env_set(target):

@@ -1,9 +1,9 @@
-.. Fabric Colors documentation master file, created by
-   sphinx-quickstart on Sun Sep  9 22:04:50 2012.
+.. fabric_colors documentation master file, created by
+   sphinx-quickstart on Sun Jun  9 14:07:12 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Fabric Colors's documentation!
+Welcome to fabric_colors's documentation!
 =========================================
 
 Contents:

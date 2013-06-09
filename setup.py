@@ -1,8 +1,19 @@
 from setuptools import setup
 
+# Computer version number from _version.py
+import re
+VERSIONFILE = "fabric_colors/_version.py"
+verstrline = open(VERSIONFILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    verstr = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
+
 setup(
     name='Fabric Colors',
-    version='0.9.41',
+    version=verstr,
     packages=['fabric_colors', ],
     license='LICENSE',
     description='Reusable fabric functions',
