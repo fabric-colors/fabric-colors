@@ -9,7 +9,10 @@ from fabric.colors import green
 from fabric_colors.environment import set_target_env
 from fabric_colors.monitor.newrelic import record_deploy
 
-import fabsettings
+try:
+    import fabsettings
+except:
+    print("Please set up your fabsettings.py")
 
 
 @task

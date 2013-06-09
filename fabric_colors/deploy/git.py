@@ -1,5 +1,9 @@
 import subprocess
-import fabsettings
+
+try:
+    import fabsettings
+except:
+    print("Please set up your fabsettings.py")
 
 from fabric.api import env, run, local, sudo, task
 from fabric.contrib.project import rsync_project
