@@ -69,8 +69,7 @@ def _env_set(target):
     env.newrelic = fabsettings.PROJECT_SITES[target].get('NEW_RELIC', False)
     env.newrelic_program = ""
     if env.newrelic:
-        env.newrelic_program = 'NEW_RELIC_CONFIG_FILE={0}/{1} newrelic-admin run-program '.\
-                                format(env.path_release_current, env.newrelic.get('INI_FILE', 'newrelic.ini'))
+        env.newrelic_program = 'NEW_RELIC_CONFIG_FILE={0}/{1} newrelic-admin run-program '.format(env.path_release_current, env.newrelic.get('INI_FILE', 'newrelic.ini'))
 
     return True
 
@@ -104,7 +103,8 @@ def set_target_env(f):
     decorator function that dynamically sets the current host's env variables
     using _env_set(target)
 
-    Usage on a fabric function:
+    Usage on a fabric function::
+
         @set_target_env
         def host_type():
             run('uname -s')
@@ -129,7 +129,6 @@ def set_target_env(f):
                         else:
                             _settings = '.'.join([env.project_name, 'settings', env.target])
                         django.settings_module(_settings)
-
 
         if not env.get('distro'):
             _env_set_distro()
