@@ -3,6 +3,8 @@ Jinja2==2.7
 MarkupSafe==0.18
 Pygments==1.6
 Sphinx==1.2b1
+colorama==0.2.5
+configobj==4.7.2
 distribute==0.6.31
 docutils==0.10
 ipython==0.13.2

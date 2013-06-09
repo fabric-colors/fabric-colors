@@ -11,8 +11,15 @@ from fabric_colors.utilities.backups import (postgres_backup, media_backup)
 from fabric_colors.environment import set_target_env
 
 
-PROJECT_NAME = env.project_name
-PROJECT_SITES = env.project_sites
+try:
+    PROJECT_NAME = env.project_name
+except:
+    PROJECT_NAME = None
+
+try:
+    PROJECT_SITES = env.project_sites
+except:
+    PROJECT_NAME = None
 
 
 @task
